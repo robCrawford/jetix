@@ -26,8 +26,8 @@ const config = {
   Top level tasks
 */
 gulp.task('default', ['dev', 'watch']);
-gulp.task('dev', ['init.dev', 'webserver', 'html', 'vendor', 'js', 'sass', 'test']);
-gulp.task('prod', ['init.prod', 'html', 'vendor', 'js', 'sass', 'test']);
+gulp.task('dev', ['init.dev', 'webserver', 'html', 'js', 'sass', 'test']);
+gulp.task('prod', ['init.prod', 'html', 'js', 'sass', 'test']);
 gulp.task('clean', clean);
 
 
@@ -64,7 +64,7 @@ gulp.task('preBuild', function(cb) {
 });
 
 gulp.task('preJs', () => {
-    return gulp.src(['./src/js/app.js', './src/js/lib/**/*.js'])
+    return gulp.src(['./src/js/**/*.js'])
         .pipe(plumber({
           errorHandler: errorHandler
         }))
@@ -87,12 +87,6 @@ gulp.task('html', ['preBuild'], function() {
     return gulp.src('./src/*.html')
         .pipe(gulp.dest('./dist/'))
         .pipe(livereload());
-});
-
-gulp.task('vendor', ['preBuild'], function () {
-    return gulp.src( './src/js/vendor/**/*.js')
-        .pipe(concat('vendor.js'))
-        .pipe(gulp.dest('./dist/js/'));
 });
 
 gulp.task('js', ['preBuild', 'preJs'], function() {
@@ -127,8 +121,7 @@ gulp.task('test', ['preBuild'], function() {
 
 gulp.task('watch', function() {
     gulp.watch('./src/*.html', ['html']);
-    gulp.watch('./src/js/vendor/**/*.js', ['vendor']);
-    gulp.watch(['./src/js/app.js', './src/js/lib/**/*.js'], ['js']);
+    gulp.watch(['./src/js/**/*.js'], ['js']);
     gulp.watch('./src/sass/**/*.scss', ['sass']);
     gulp.watch('./src/test/**/*.js', ['test']);
 });

@@ -1,5 +1,4 @@
 [ignore]
-./src/js/vendor/**/.*
 
 [include]
 ./src/js/**/*.js

@@ -1,7 +1,7 @@
 
 A `Model`, `Update`, `View` pattern in ES6 based on [The Elm Architecture](https://guide.elm-lang.org/architecture/).
 
-Set up with ES6 modules, Flow, and Karma.  
+Set up with ES6 modules, Flow, Sass, and Karma.  
 Live reload requires the [Chrome liveReload plugin](https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei).
 
 ```
