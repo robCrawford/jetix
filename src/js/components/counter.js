@@ -9,9 +9,10 @@ type Model =
     { counter: number;
     };
 
-type Msg
-    = "Increment"
-    | "Decrement";
+type Msg =
+    "Increment" |
+    "Decrement" |
+    "Log";
 
 
 export default (componentId: string): Config<Model, Msg> => ({
@@ -22,13 +23,18 @@ export default (componentId: string): Config<Model, Msg> => ({
         counter: 0
     },
 
-    update(model) {
+    update(model, action) {
         return {
             Increment: ([step]) => {
                 model.counter += step;
+                return action("Log");
             },
             Decrement: ([step]) => {
                 model.counter -= step;
+                return action("Log");
+            },
+            Log: () => {
+                console.log(model.counter);
             }
         };
     },
@@ -36,9 +42,9 @@ export default (componentId: string): Config<Model, Msg> => ({
     view(model, action): void {
         render(componentId,
             div([
-                button('+', () => action("Increment", 1)),
+                button('+', action("Increment", 1)),
                 div([ text(String(model.counter)) ]),
-                button('-', () => action("Decrement", 2))
+                button('-', action("Decrement", 2))
             ], "counter")
         );
     }

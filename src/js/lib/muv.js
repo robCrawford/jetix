@@ -3,34 +3,39 @@
   `Model, Update, View` wiring
 */
 export type Action<msg> =
-    (tag: msg, ...data: any[]) => void;
+    (tag: msg, ...data: any[]) => () => void;
 
 export type Handlers<msg> =
-    { [tag: msg]: (data: any[]) => void; };
+    { [tag: msg]: (data: any[]) => (() => void) | void; };
 
-export type Config<a, msg> =
-    { id: string
-    , initialModel: a
-    , update: (model: a) => Handlers<msg>
-    , view: (model: a, action: Action<msg>) => void
-    }
+export type Config<a, msg> = {
+    id: string,
+    initialModel: a,
+    update: (model: a, action: Action<msg>) => Handlers<msg>,
+    view: (model: a, action: Action<msg>) => void
+}
 
 
 export function add<a, msg>(config: Config<a, msg>): void {
     const componentId = config.id;
 
+    function action(model: a): Action<msg> {
+        return (tag, ...data) => () => {
+            view(update(model, tag, data));
+        };
+    }
+
     function update(model: a, tag: msg, data: any[]): a {
-        const updatedModel = Object.assign({}, model);
-        config.update(updatedModel)[tag](data);
-        return updatedModel;
+        const newModel = Object.assign({}, model);
+        const nextAction = config.update(newModel, action(newModel))[tag](data);
+        if (nextAction) {
+            nextAction();
+        }
+        return newModel;
     }
 
     function view(model: a): void {
-        config.view(
-            model,
-            (tag, ...data) => {
-                view(update(model, tag, data));
-            });
+        config.view(model, action(model));
     }
 
     // Initialise
