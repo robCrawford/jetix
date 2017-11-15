@@ -2,12 +2,13 @@
   @flow
   Counter component
 */
+import { logState } from "../lib/muv";
 import type { Config } from "../lib/muv";
 
 
-type Model =
-    { counter: number;
-    };
+type Model = {
+    counter: number;
+};
 
 type Msg =
     "Increment" |
@@ -33,13 +34,11 @@ export default (componentId: string): Config<Model, Msg> => ({
                 model.counter -= step;
                 return action("Log");
             },
-            Log: () => {
-                console.log(model.counter);
-            }
+            Log: logState
         };
     },
 
-    view(model, action): void {
+    view(model, action) {
         render(componentId,
             div([
                 button('+', action("Increment", 1)),
@@ -83,7 +82,7 @@ function text(content: string): Text {
     return document.createTextNode(content);
 }
 
-function button(label: string, clickAction: (e: Event) => void): HTMLElement {
+function button(label: string, clickAction: (e: Event) => any): HTMLElement {
     const button = el('button');
     button.appendChild(text(label));
     button.onclick = clickAction;

@@ -2,36 +2,39 @@
   @flow
   `Model, Update, View` wiring
 */
-export type Action<msg> =
-    (tag: msg, ...data: any[]) => () => void;
+const state = {};
 
-export type Handlers<msg> =
-    { [tag: msg]: (data: any[]) => (() => void) | void; };
+
+export type Action<a, msg> =
+    (tag: msg, ...data: any[]) => () => a;
+
+export type Handlers<a, msg> =
+    { [tag: msg]: (data: any[]) => (() => a) | void; };
 
 export type Config<a, msg> = {
     id: string,
     initialModel: a,
-    update: (model: a, action: Action<msg>) => Handlers<msg>,
-    view: (model: a, action: Action<msg>) => void
+    update: (model: a, action: Action<a, msg>) => Handlers<a, msg>,
+    view: (model: a, action: Action<a, msg>) => void
 }
 
 
 export function add<a, msg>(config: Config<a, msg>): void {
     const componentId = config.id;
 
-    function action(model: a): Action<msg> {
+    function action(model: a): Action<a, msg> {
         return (tag, ...data) => () => {
-            view(update(model, tag, data));
+            const updatedModel = update(model, tag, data);
+            view(updatedModel);
+            return updatedModel;
         };
     }
 
     function update(model: a, tag: msg, data: any[]): a {
-        const newModel = Object.assign({}, model);
-        const nextAction = config.update(newModel, action(newModel))[tag](data);
-        if (nextAction) {
-            nextAction();
-        }
-        return newModel;
+        const nextModel = Object.assign({}, model);
+        const nextAction = config.update(nextModel, action(nextModel))[tag](data);
+        state[componentId] = nextModel; // Just for logging
+        return (nextAction ? nextAction() : nextModel);
     }
 
     function view(model: a): void {
@@ -42,7 +45,7 @@ export function add<a, msg>(config: Config<a, msg>): void {
     const componentRoot = document.createElement("div");
     componentRoot.id = componentId;
     getRootElement().appendChild(componentRoot);
-    view(config.initialModel);
+    view(state[componentId] = config.initialModel);
 }
 
 
@@ -51,6 +54,11 @@ export function remove(componentId: string): void {
     if (componentRoot) {
         getRootElement().removeChild(componentRoot);
     }
+}
+
+
+export function logState(): void {
+    console.table(state);
 }
 
 
