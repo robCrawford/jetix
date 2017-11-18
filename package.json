@@ -46,5 +46,7 @@
     "spa-server": "^1.0.0",
     "vinyl-buffer": "^1.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "snabbdom": "^0.7.0"
+  }
 }

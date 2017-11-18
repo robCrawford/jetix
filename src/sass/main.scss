@@ -12,9 +12,14 @@ html, body {
     border-radius: 5px;
     font-size: 14px;
     color: #FFF;
+    margin-right: 20px;
 
     button {
         margin: 5px;
         width: 100px;
+    }
+
+    .highlight {
+        color: #77DD77;
     }
 }

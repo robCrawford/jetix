@@ -2,89 +2,66 @@
   @flow
   Counter component
 */
-import { logState } from "../lib/muv";
 import type { Config } from "../lib/muv";
+import { init } from "../lib/muv";
+import { h } from "../lib/snabbdom";
 
+
+type Props = {
+    start: number;
+}
 
 type Model = {
     counter: number;
+    highlight: boolean;
 };
 
 type Msg =
     "Increment" |
     "Decrement" |
-    "Log";
+    "SetHighlight";
 
 
-export default (componentId: string): Config<Model, Msg> => ({
+export default (props: Props) => init(
+    ({
+        initialModel: {
+            counter: props.start,
+            highlight: isHighlight(props.start)
+        },
 
-    id: componentId,
+        update(model, action) {
+            return {
+                Increment: ([ step: number ]) => {
+                    model.counter += step;
+                    return action("SetHighlight");
+                },
+                Decrement: ([ step: number ]) => {
+                    model.counter -= step;
+                    return action("SetHighlight");
+                },
+                SetHighlight: () => {
+                    model.highlight = isHighlight(model.counter);
+                }
+            };
+        },
 
-    initialModel: {
-        counter: 0
-    },
+        view(model, action) {
+            return h("div.counter", [
+                h('button',
+                    { on: { click: action("Increment", 1) } },
+                    "+"),
+                h('div',
+                    { class: { highlight: model.highlight } },
+                    String(model.counter)),
+                h('button',
+                    { on: { click: action("Decrement", 2) } },
+                    "-")
+            ]);
+        }
 
-    update(model, action) {
-        return {
-            Increment: ([step]) => {
-                model.counter += step;
-                return action("Log");
-            },
-            Decrement: ([step]) => {
-                model.counter -= step;
-                return action("Log");
-            },
-            Log: logState
-        };
-    },
+    }: Config<Model, Msg>)
+);
 
-    view(model, action) {
-        render(componentId,
-            div([
-                button('+', action("Increment", 1)),
-                div([ text(String(model.counter)) ]),
-                button('-', action("Decrement", 2))
-            ], "counter")
-        );
-    }
-});
-
-
-/*
-  Utils
-*/
-function render(id: string, children: HTMLElement): void {
-    const node = document.getElementById(id);
-    empty(node);
-    node.appendChild(children);
-}
-
-function empty(node: HTMLElement): void {
-    while (node.firstChild) {
-        node.removeChild(node.firstChild);
-    }
-}
-
-function el(type: string): HTMLElement {
-    return document.createElement(type);
-}
-
-function div(children: Array<HTMLElement | Text> = [], classes?: string): HTMLElement{
-    const div = el('div');
-    if (classes) {
-        div.className = classes;
-    }
-    children.forEach(el => div.appendChild(el));
-    return div;
-}
-
-function text(content: string): Text {
-    return document.createTextNode(content);
-}
-
-function button(label: string, clickAction: (e: Event) => any): HTMLElement {
-    const button = el('button');
-    button.appendChild(text(label));
-    button.onclick = clickAction;
-    return button;
+function isHighlight(n: number): boolean {
+    return !!n && n % 2 === 0;
 }

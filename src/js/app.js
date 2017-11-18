@@ -1,9 +1,12 @@
 /* @flow */
-import { add } from "./lib/muv";
+import { main } from "./lib/muv";
+import { h } from "./lib/snabbdom";
 import counter from "./components/counter";
 
 
-document.addEventListener("DOMContentLoaded", () => {
-    add(counter("counter1"));
-    add(counter("counter2"));
-});
+main(
+    h("div.container", [
+        counter({ start: 0 }),
+        counter({ start: 2 })
+    ])
+);
