@@ -67,6 +67,6 @@ export default (props: Props) => init(
 );
 
 
-function isHighlight(n: number): boolean {
+export function isHighlight(n: number): boolean {
     return !!n && n % 2 === 0;
 }

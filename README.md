@@ -15,8 +15,8 @@ Then visit: `http://localhost:8080`
 Run tests with `npm test`.
 
 
-Example component
------------------
+Example counter component
+-------------------------
 [Online demo](http://robcrawford.github.io/demos/es6-muv/)
 ```
 type Props = {
@@ -75,7 +75,7 @@ export default (props: Props) => init(
 );
 
 
-function isHighlight(n: number): boolean {
+export function isHighlight(n: number): boolean {
     return !!n && n % 2 === 0;
 }
 
