@@ -66,6 +66,7 @@ export default (props: Props) => init(
     }: Config<Model, Msg>)
 );
 
+
 function isHighlight(n: number): boolean {
     return !!n && n % 2 === 0;
 }
