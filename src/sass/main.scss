@@ -5,6 +5,7 @@ html, body {
 }
 .counter {
     display: inline-block;
+    vertical-align: top;
     text-align: center;
     background: #888;
     padding: 20px;
@@ -21,5 +22,15 @@ html, body {
 
     .highlight {
         color: #77DD77;
+    }
+}
+.warning {
+    display: none;
+
+    &.show {
+        display: block;
+    }
+    button {
+        width: auto;
     }
 }

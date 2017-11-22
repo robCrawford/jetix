@@ -5,11 +5,12 @@
 import type { Config } from "../lib/muv";
 import { init } from "../lib/muv";
 import { h } from "../lib/snabbdom";
+import warning from "./warning";
 
 
 type Props = {
     start: number;
-}
+};
 
 type Model = {
     counter: number;
@@ -55,7 +56,10 @@ export default (props: Props) => init(
                     String(model.counter)),
                 h('button',
                     { on: { click: action("Decrement", 2) } },
-                    "-")
+                    "-"),
+                (model.counter < 0) ?
+                    warning({ message: "Negative!" }) :
+                    ""
             ]);
         }
 
