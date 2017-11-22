@@ -5,16 +5,16 @@
 import { patch } from "../lib/snabbdom";
 
 
-export type Action<a, msg> =
-    (tag: msg, ...data: any[]) => () => a;
+export type Action<msg> =
+    (tag: msg, ...data: any[]) => () => void;
 
-export type Handlers<a, msg> =
-    { [tag: msg]: (data: any[]) => (() => a) | void; };
+export type Handlers<msg> =
+    { [tag: msg]: (data: any[]) => (() => void) | void; };
 
 export type Config<a, msg> = {
     initialModel: a,
-    update: (model: a, action: Action<a, msg>) => Handlers<a, msg>,
-    view: (model: a, action: Action<a, msg>) => void
+    update: (model: a, action: Action<msg>) => Handlers<msg>,
+    view: (model: a, action: Action<msg>) => void
 }
 
 
@@ -24,22 +24,18 @@ export function init<a, msg>(config: Config<a, msg>): void {
             action(config.initialModel)
         );
 
-    function action(model: a, level: number = 0): Action<a, msg> {
+    function action(model: a): Action<msg> {
         return (tag, ...data) => () => {
-            const newModel = update(model, tag, data, level);
-            if (level === 0) {
+            const newModel = update(model, tag, data);
+            if (newModel) {
                 view(newModel);
             }
-            return newModel;
         };
     }
 
-    function update(model: a, tag: msg, data: any[], level: number): a {
+    function update(model: a, tag: msg, data: any[]): a | void {
         const newModel = clone(model);
-        const nextAction = config.update(
-                newModel,
-                action(newModel, level + 1)
-            )[tag](data);
+        const nextAction = config.update(newModel, action(newModel))[tag](data);
         deepFreeze(newModel);
         return (nextAction ? nextAction() : newModel);
     }
