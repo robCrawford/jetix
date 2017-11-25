@@ -18,7 +18,12 @@ Run tests with `npm test`.
 Example counter component
 -------------------------
 [Online demo](http://robcrawford.github.io/demos/es6-muv/)
-```
+
+- Types `Msg` and `Model` are enforced throughout by the `Config<Model, Msg>` annotation.  
+- `Validate` demonstrates a promise that resolves with an action.  
+- `message` demonstrates a child component.  
+
+```JavaScript
 type Props = {
     start: number;
 };
@@ -26,33 +31,49 @@ type Props = {
 type Model = {
     counter: number;
     highlight: boolean;
+    errors: string;
 };
 
 type Msg =
     "Increment" |
     "Decrement" |
-    "SetHighlight";
+    "Highlight" |
+    "Validate" |
+    "SetErrors";
 
 
 export default (props: Props) => init(
     ({
         initialModel: {
             counter: props.start,
-            highlight: isHighlight(props.start)
+            highlight: isEven(props.start),
+            errors: ""
         },
 
         update(model, action) {
             return {
-                Increment: ([ step: number ]) => {
+                Increment: (step: number) => {
                     model.counter += step;
-                    return action("SetHighlight");
+                    return [
+                        action("Highlight"),
+                        action("Validate")
+                    ];
                 },
-                Decrement: ([ step: number ]) => {
+                Decrement: (step: number) => {
                     model.counter -= step;
-                    return action("SetHighlight");
+                    return action("Validate");
                 },
-                SetHighlight: () => {
-                    model.highlight = isHighlight(model.counter);
+                Highlight: () => {
+                    model.highlight = isEven(model.counter);
+                },
+                Validate: () => {
+                    model.errors = "";
+                    // Async
+                    return validateCount(model.counter)
+                        .then(e => action("SetErrors", e));
+                },
+                SetErrors: (text: string) => {
+                    model.errors = text;
                 }
             };
         },
@@ -67,7 +88,11 @@ export default (props: Props) => init(
                     String(model.counter)),
                 h('button',
                     { on: { click: action("Decrement", 2) } },
-                    "-")
+                    "-"),
+                // Child component
+                model.errors.length ?
+                    message({ text: model.errors }) :
+                    ""
             ]);
         }
 
@@ -75,8 +100,17 @@ export default (props: Props) => init(
 );
 
 
-export function isHighlight(n: number): boolean {
-    return !!n && n % 2 === 0;
+export function isEven(n: number): boolean {
+    return !(n % 2);
 }
 
+export function isNegative(n: number): boolean {
+    return n < 0;
+}
+
+function validateCount(n: number): Promise<string> {
+    return new Promise((resolve/*, reject*/) => {
+        setTimeout(() => resolve(isNegative(n) ? "Negative!" : ""), 500);
+    });
+}
 ```

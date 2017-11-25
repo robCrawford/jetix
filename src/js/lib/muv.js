@@ -5,11 +5,16 @@
 import { patch } from "../lib/snabbdom";
 
 
+type Thunk = () => void;
+
+type HandlerOutput =
+    Thunk | Thunk[] | Promise<any> | void;
+
 export type Action<msg> =
-    (tag: msg, ...data: any[]) => () => void;
+    (tag: msg, ...data: any[]) => Thunk;
 
 export type Handlers<msg> =
-    { [tag: msg]: (data: any[]) => (() => void) | void; };
+    { [tag: msg]: (...data: any[]) => HandlerOutput; };
 
 export type Config<a, msg> = {
     initialModel: a,
@@ -19,35 +24,53 @@ export type Config<a, msg> = {
 
 
 export function init<a, msg>(config: Config<a, msg>): void {
-    let componentRoot = config.view(
-            config.initialModel,
-            action(config.initialModel)
-        );
+    let model: a = config.initialModel;
+    let componentRoot;
+    let blockRender: boolean = false;
 
-    function action(model: a): Action<msg> {
-        return (tag, ...data) => () => {
-            const newModel = update(model, tag, data);
-            if (newModel) {
-                view(newModel);
+    const action: Action<msg> = (tag, ...data) =>
+        () => {
+            if (update(tag, data) && !blockRender) {
+                patch(
+                    componentRoot,
+                    componentRoot = config.view(model, action)
+                );
             }
         };
+
+    function update(tag: msg, data: any[]): boolean {
+        model = clone(model);
+        const next = config.update(model, action)[tag]
+            .apply(null, data);
+        deepFreeze(model);
+        return run(next);
     }
 
-    function update(model: a, tag: msg, data: any[]): a | void {
-        const newModel = clone(model);
-        const nextAction = config.update(newModel, action(newModel))[tag](data);
-        deepFreeze(newModel);
-        return (nextAction ? nextAction() : newModel);
+    function run(next: HandlerOutput): boolean {
+        // Render view only when `next` chain ends
+        let render = false;
+
+        if (!next) {
+            render = true;
+        }
+        else if (typeof next === "function") {
+            next();
+        }
+        else if (Array.isArray(next)) {
+            blockRender = true;
+            next.forEach(a => run(a));
+            blockRender = false;
+            render = true;
+        }
+        else if (typeof next.then === "function") {
+            next.then(a => a && a());
+            render = true; // End of sync chain
+        }
+
+        return render;
     }
 
-    function view(model: a): void {
-        patch(
-            componentRoot,
-            componentRoot = config.view(model, action(model))
-        );
-    }
-
-    return componentRoot;
+    return componentRoot = config.view(model, action);
 }
 
 

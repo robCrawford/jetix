@@ -1,6 +1,6 @@
 /*
   @flow
-  Warning component
+  Message component
 */
 import type { Config } from "../lib/muv";
 import { init } from "../lib/muv";
@@ -8,7 +8,7 @@ import { h } from "../lib/snabbdom";
 
 
 type Props = {
-    message: string;
+    text: string;
 };
 
 type Model = {
@@ -34,9 +34,9 @@ export default (props: Props) => init(
         },
 
         view(model, action) {
-            return h("div.warning",
+            return h("div.message",
                 { class: { show: model.show } },
-                [ props.message,
+                [ props.text,
                     h('button',
                         { on: { click: action("Hide") } },
                         "OK")
