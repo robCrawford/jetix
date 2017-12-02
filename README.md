@@ -1,5 +1,5 @@
 
-A `Model`, `Update`, `View` pattern in ES6 based on [The Elm Architecture](https://guide.elm-lang.org/architecture/).  
+A `Model`, `Update`, `View` pattern in ES6 influenced by [The Elm Architecture](https://guide.elm-lang.org/architecture/) and [React](https://reactjs.org/tutorial/tutorial.html#passing-data-through-props).  
 
 
 Uses [Snabbdom VDOM](https://github.com/snabbdom/snabbdom), ES6 modules, Flow, Sass, and Karma.  
@@ -17,7 +17,7 @@ Run tests with `npm test`.
 
 Example counter component
 -------------------------
-[Online demo](http://robcrawford.github.io/demos/es6-muv/)
+[Demo](http://robcrawford.github.io/demos/es6-muv/)  
 
 - Types `Msg` and `Model` are enforced throughout by the `Config<Model, Msg>` annotation.  
 - `Validate` demonstrates a promise that resolves with an action.  
@@ -51,6 +51,8 @@ export default (props: Props) => init(
         },
 
         update(model, action) {
+            // A handler updates `model` and returns any next action(s),
+            // or a `Promise` that resolves with an action
             return {
                 Increment: (step: number) => {
                     model.counter += step;
@@ -114,3 +116,13 @@ function validateCount(n: number): Promise<string> {
     });
 }
 ```
+
+
+Developing tests
+----------------
+Karma is configured to run tests once and then exit.  
+To watch and run tests during development:
+
+- In `Karma.conf.js` change `singleRun` to `false` and `autoWatch` to `true`  
+- Run `gulp` in one terminal  
+- Run `npm test` in another  

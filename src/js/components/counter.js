@@ -35,6 +35,8 @@ export default (props: Props) => init(
         },
 
         update(model, action) {
+            // A handler updates `model` and returns any next action(s),
+            // or a `Promise` that resolves with an action
             return {
                 Increment: (step: number) => {
                     model.counter += step;
