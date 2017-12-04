@@ -7,26 +7,28 @@ const gulp = require('gulp'),
     browserify = require('browserify'),
     buffer = require('vinyl-buffer'),
     del = require('del'),
+    spawn = require('child_process').spawn,
+    readline = require('readline'),
     uglify = require('gulp-uglify'),
     sourcemaps = require('gulp-sourcemaps'),
     eslint = require('gulp-eslint'),
-    flow = require('gulp-flowtype'),
+    flow = require('flow-bin'),
     tap = require('gulp-tap'),
     sass = require('gulp-sass'),
     livereload = require('gulp-livereload'),
     serverFactory = require('spa-server');
 
 const config = {
-        buildType: 'dev',
-        cleanFlag: false
-    };
+    buildType: 'dev',
+    cleanFlag: false
+};
 
 
 /*
   Top level tasks
 */
 gulp.task('default', ['dev', 'watch']);
-gulp.task('dev', ['init.dev', 'webserver', 'html', 'js', 'sass', 'test']);
+gulp.task('dev', ['init.dev', 'html', 'js', 'sass', 'test']);
 gulp.task('prod', ['init.prod', 'html', 'js', 'sass', 'test']);
 gulp.task('clean', clean);
 
@@ -34,7 +36,7 @@ gulp.task('clean', clean);
 /*
   Sub tasks
 */
-gulp.task('init.dev', function () {
+gulp.task('init.dev', ['flowserver', 'webserver'], function () {
     config.buildType = 'dev';
     config.cleanFlag = true;
     livereload.listen();
@@ -43,6 +45,15 @@ gulp.task('init.dev', function () {
 gulp.task('init.prod', function() {
     config.buildType = 'prod';
     config.cleanFlag = true;
+});
+
+gulp.task('flowserver', function() {
+    const p = spawn(flow);
+    const log = d => logProgress('Flow', d);
+    p.stdout.on('data', log);
+    p.stderr.on('data', log);
+    p.stderr.on('error', () => gutil.beep());
+    p.on('close', () => console.log(' done.'));
 });
 
 gulp.task('webserver', function () {
@@ -63,24 +74,30 @@ gulp.task('preBuild', function(cb) {
     else cb();
 });
 
-gulp.task('preJs', () => {
+gulp.task('typecheck', function() {
+    const p = spawn(flow, ['check']);
+    const log = d => {
+        process.stdout.write('Flow: ' + d);
+    };
+    p.stdout.on('data', d => {
+        if(!/\D0 errors/.test(d)) {
+            gutil.beep();
+            log(d);
+        }
+    });
+    p.stderr.on('data', log);
+    p.stderr.on('error', () => gutil.beep());
+});
+
+gulp.task('lint', () => {
     return gulp.src(['./src/js/**/*.js'])
         .pipe(plumber({
-          errorHandler: errorHandler
+            errorHandler: errorHandler
         }))
         // eslint
         .pipe(eslint())
         .pipe(eslint.format())
         .pipe(eslint.failAfterError())
-        // flow
-        .pipe(flow({
-            all: false,
-            weak: false,
-            // declarations: './declarations',
-            killFlow: false,
-            beep: true,
-            abort: false
-        }));
 });
 
 gulp.task('html', ['preBuild'], function() {
@@ -89,7 +106,7 @@ gulp.task('html', ['preBuild'], function() {
         .pipe(livereload());
 });
 
-gulp.task('js', ['preBuild', 'preJs'], function() {
+gulp.task('js', ['preBuild', 'typecheck', 'lint'], function() {
     const src = transpile('./src/js/app.js');
 
     if (config.buildType === 'prod') {
@@ -137,6 +154,12 @@ function errorHandler(err) {
     }
     gutil.beep();
     this.emit('end');
+}
+
+function logProgress(label, data) {
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0);
+    process.stdout.write(data);
 }
 
 function transpile(files) {

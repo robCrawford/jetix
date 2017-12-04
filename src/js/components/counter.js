@@ -8,15 +8,15 @@ import { h } from "../lib/snabbdom";
 import message from "./message";
 
 
-type Props = {
-    start: number;
-};
+type Props = {|
+    +start: number;
+|};
 
-type Model = {
+type Model = {|
     counter: number;
     highlight: boolean;
     errors: string;
-};
+|};
 
 type Msg =
     "Increment" |

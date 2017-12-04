@@ -7,13 +7,13 @@ import { init } from "../lib/muv";
 import { h } from "../lib/snabbdom";
 
 
-type Props = {
-    text: string;
-};
+type Props = {|
+    +text: string;
+|};
 
-type Model = {
+type Model = {|
     show: boolean;
-};
+|};
 
 type Msg =
     "Hide";

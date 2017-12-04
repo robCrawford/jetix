@@ -14,13 +14,13 @@ export type Action<msg> =
     (tag: msg, ...data: any[]) => Thunk;
 
 export type Handlers<msg> =
-    { [tag: msg]: (...data: any[]) => HandlerOutput; };
+    { +[tag: msg]: (...data: any[]) => HandlerOutput; };
 
-export type Config<a, msg> = {
-    initialModel: a,
-    update: (model: a, action: Action<msg>) => Handlers<msg>,
-    view: (model: a, action: Action<msg>) => void
-}
+export type Config<a, msg> = {|
+    +initialModel: a,
+    +update: (model: a, action: Action<msg>) => Handlers<msg>,
+    +view: (model: a, action: Action<msg>) => void
+|}
 
 
 export function init<a, msg>(config: Config<a, msg>): void {
