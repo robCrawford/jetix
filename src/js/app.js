@@ -1,6 +1,6 @@
 /* @flow */
 import { main } from "./lib/muv";
-import { h } from "./lib/snabbdom";
+import { h } from "./lib/vdom";
 import counter from "./components/counter";
 
 

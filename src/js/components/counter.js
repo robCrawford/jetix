@@ -4,7 +4,7 @@
 */
 import type { Config } from "../lib/muv";
 import { init } from "../lib/muv";
-import { h } from "../lib/snabbdom";
+import { h } from "../lib/vdom";
 import message from "./message";
 
 

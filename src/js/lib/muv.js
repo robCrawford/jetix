@@ -2,7 +2,7 @@
   @flow
   `Model, Update, View` wiring
 */
-import { patch } from "../lib/snabbdom";
+import { patch } from "../lib/vdom";
 
 
 type Thunk = () => void;
@@ -24,13 +24,14 @@ export type Config<a, msg> = {|
 
 
 export function init<a, msg>(config: Config<a, msg>): void {
+    // Lines marked `@Dev-only` are removed by `prod` build
     let model: a = config.initialModel;
     let componentRoot;
-    let blockRender: boolean = false;
+    let recursionDepth: number = 0;
 
     const action: Action<msg> = (tag, ...data) =>
         () => {
-            if (update(tag, data) && !blockRender) {
+            if (update(tag, data) && !recursionDepth) {
                 patch(
                     componentRoot,
                     componentRoot = config.view(model, action)
@@ -39,10 +40,10 @@ export function init<a, msg>(config: Config<a, msg>): void {
         };
 
     function update(tag: msg, data: any[]): boolean {
-        model = clone(model);
+        model = clone(model); // @Dev-only
         const next = config.update(model, action)[tag]
             .apply(null, data);
-        deepFreeze(model);
+        deepFreeze(model); // @Dev-only
         return run(next);
     }
 
@@ -57,9 +58,9 @@ export function init<a, msg>(config: Config<a, msg>): void {
             next();
         }
         else if (Array.isArray(next)) {
-            blockRender = true;
+            recursionDepth++;
             next.forEach(a => run(a));
-            blockRender = false;
+            recursionDepth--;
             render = true;
         }
         else if (typeof next.then === "function") {

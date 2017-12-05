@@ -10,6 +10,7 @@ const gulp = require('gulp'),
     spawn = require('child_process').spawn,
     readline = require('readline'),
     uglify = require('gulp-uglify'),
+    replace = require('gulp-replace'),
     sourcemaps = require('gulp-sourcemaps'),
     eslint = require('gulp-eslint'),
     flow = require('flow-bin'),
@@ -53,7 +54,7 @@ gulp.task('flowserver', function() {
     p.stdout.on('data', log);
     p.stderr.on('data', log);
     p.stderr.on('error', () => gutil.beep());
-    p.on('close', () => console.log(' done.'));
+    p.on('close', () => process.stdout.write('done.\r\n'));
 });
 
 gulp.task('webserver', function () {
@@ -111,6 +112,8 @@ gulp.task('js', ['preBuild', 'typecheck', 'lint'], function() {
 
     if (config.buildType === 'prod') {
         return src.pipe(buffer())
+            // Remove lines marked // @Dev-only
+            .pipe(replace(/.*\/\/ \@Dev-only/g, ''))
             .pipe(sourcemaps.init({loadMaps: true}))
             .pipe(uglify())
             .pipe(sourcemaps.write('./'))

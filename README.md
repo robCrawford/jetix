@@ -24,15 +24,15 @@ Example counter component
 - `message` demonstrates a child component.  
 
 ```JavaScript
-type Props = {
-    start: number;
-};
+type Props = {|
+    +start: number;
+|};
 
-type Model = {
+type Model = {|
     counter: number;
     highlight: boolean;
     errors: string;
-};
+|};
 
 type Msg =
     "Increment" |
@@ -116,13 +116,3 @@ function validateCount(n: number): Promise<string> {
     });
 }
 ```
-
-
-Developing tests
-----------------
-Karma is configured to run tests once and then exit.  
-To watch and run tests during development:
-
-- In `Karma.conf.js` change `singleRun` to `false` and `autoWatch` to `true`  
-- Run `gulp` in one terminal  
-- Run `npm test` in another  
