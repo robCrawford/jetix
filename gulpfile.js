@@ -102,8 +102,12 @@ gulp.task('lint', () => {
 });
 
 gulp.task('html', ['preBuild'], function() {
-    return gulp.src('./src/*.html')
-        .pipe(gulp.dest('./dist/'))
+    const src = gulp.src('./src/*.html');
+
+    if (config.buildType === 'prod') {
+        src.pipe(replace(/.*\@Dev-only -->/g, ''));
+    }
+    return src.pipe(gulp.dest('./dist/'))
         .pipe(livereload());
 });
 

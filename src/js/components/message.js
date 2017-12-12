@@ -19,13 +19,15 @@ type Msg =
     "Hide";
 
 
-export default (props: Props) => init(
-    ({
+export default (props: Props) =>
+
+    init(action => ({
+
         initialModel: {
             show: true
         },
 
-        update(model/*, action*/) {
+        update(model) {
             return {
                 Hide: () => {
                     model.show = false;
@@ -33,7 +35,7 @@ export default (props: Props) => init(
             };
         },
 
-        view(model, action) {
+        view(model) {
             return h("div.message",
                 { class: { show: model.show } },
                 [ props.text,

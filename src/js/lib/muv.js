@@ -7,71 +7,76 @@ import { patch } from "../lib/vdom";
 
 type Thunk = () => void;
 
-type HandlerOutput =
+type Next =
     Thunk | Thunk[] | Promise<any> | void;
 
 export type Action<msg> =
     (tag: msg, ...data: any[]) => Thunk;
 
 export type Handlers<msg> =
-    { +[tag: msg]: (...data: any[]) => HandlerOutput; };
+    { +[tag: msg]: (...data: any[]) => Next; };
 
 export type Config<a, msg> = {|
     +initialModel: a,
-    +update: (model: a, action: Action<msg>) => Handlers<msg>,
-    +view: (model: a, action: Action<msg>) => void
+    +initialAction?: Next,
+    +update: (model: a) => Handlers<msg>,
+    +view: (model: a) => void
 |}
 
 
-export function init<a, msg>(config: Config<a, msg>): void {
-    // Lines marked `@Dev-only` are removed by `prod` build
+export function init<a, msg>(getConfig: Action<msg> => Config<a, msg>) {
+    const config = getConfig(action);
     let model: a = config.initialModel;
     let componentRoot;
-    let recursionDepth: number = 0;
+    let noRender: number = 0;
 
-    const action: Action<msg> = (tag, ...data) =>
-        () => {
-            if (update(tag, data) && !recursionDepth) {
-                patch(
-                    componentRoot,
-                    componentRoot = config.view(model, action)
-                );
-            }
-        };
-
-    function update(tag: msg, data: any[]): boolean {
-        model = clone(model); // @Dev-only
-        const next = config.update(model, action)[tag]
-            .apply(null, data);
-        deepFreeze(model); // @Dev-only
-        return run(next);
+    function action(tag, ...data) {
+        return () => update(tag, data);
     }
 
-    function run(next: HandlerOutput): boolean {
-        // Render view only when `next` chain ends
-        let render = false;
+    function update(tag: msg, data: any[]): void {
+        // Lines marked `@Dev-only` are removed by `prod` build
+        model = clone(model); // @Dev-only
+        const next = config.update(model)[tag]
+            .apply(null, data);
+        deepFreeze(model); // @Dev-only
+        run(next);
+    }
 
+    function run(next: Next): void {
         if (!next) {
-            render = true;
+            render();
         }
         else if (typeof next === "function") {
             next();
         }
         else if (Array.isArray(next)) {
-            recursionDepth++;
-            next.forEach(a => run(a));
-            recursionDepth--;
-            render = true;
+            noRender++;
+            next.forEach(run);
+            noRender--;
+            render();
         }
         else if (typeof next.then === "function") {
-            next.then(a => a && a());
-            render = true; // End of sync chain
+            next.then(run);
+            render(); // End of sync chain
         }
-
-        return render;
     }
 
-    return componentRoot = config.view(model, action);
+    function render(): void {
+        if (!noRender) {
+            patch(
+                componentRoot,
+                componentRoot = config.view(model)
+            );
+        }
+    }
+
+    if (config.initialAction) {
+        noRender++;
+        run(config.initialAction);
+        noRender--;
+    }
+    return componentRoot = config.view(model);
 }
 
 

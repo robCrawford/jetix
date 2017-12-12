@@ -26,17 +26,22 @@ type Msg =
     "SetErrors";
 
 
-export default (props: Props) => init(
-    ({
+export default (props: Props) =>
+
+    init(action => ({
+
         initialModel: {
             counter: props.start,
             highlight: isEven(props.start),
             errors: ""
         },
 
-        update(model, action) {
+        initialAction:
+            action("Validate"),
+
+        update(model) {
             // A handler updates `model` and returns any next action(s),
-            // or a `Promise` that resolves with an action
+            // or a `Promise` that resolves with next action(s)
             return {
                 Increment: (step: number) => {
                     model.counter += step;
@@ -64,7 +69,7 @@ export default (props: Props) => init(
             };
         },
 
-        view(model, action) {
+        view(model) {
             return h("div.counter", [
                 h('button',
                     { on: { click: action("Increment", 1) } },
@@ -75,6 +80,7 @@ export default (props: Props) => init(
                 h('button',
                     { on: { click: action("Decrement", 2) } },
                     "-"),
+
                 // Child component
                 model.errors.length ?
                     message({ text: model.errors }) :
@@ -86,6 +92,7 @@ export default (props: Props) => init(
 );
 
 
+// Export for tests
 export function isEven(n: number): boolean {
     return !(n % 2);
 }
@@ -95,7 +102,7 @@ export function isNegative(n: number): boolean {
 }
 
 function validateCount(n: number): Promise<string> {
-    return new Promise((resolve/*, reject*/) => {
+    return new Promise(resolve => {
         setTimeout(() => resolve(isNegative(n) ? "Negative!" : ""), 500);
     });
 }
