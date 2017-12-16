@@ -8,7 +8,7 @@ import { patch } from "../lib/vdom";
 type Thunk = () => void;
 
 type Next =
-    Thunk | Thunk[] | Promise<any> | void;
+    Thunk | Promise<any> | Array<Thunk | Promise<any>> | void;
 
 export type Action<msg> =
     (tag: msg, ...data: any[]) => Thunk;

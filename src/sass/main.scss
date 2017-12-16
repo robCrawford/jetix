@@ -3,6 +3,9 @@ html, body {
     margin: 0;
     font: 12px sans-serif;
 }
+.intro {
+    margin-bottom: 20px;
+}
 .counter {
     display: inline-block;
     vertical-align: top;
@@ -24,7 +27,7 @@ html, body {
         color: #77DD77;
     }
 }
-.message {
+.notification {
     display: none;
 
     &.show {

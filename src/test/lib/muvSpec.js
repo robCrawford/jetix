@@ -148,6 +148,44 @@ describe("Model, Update, View", function() {
         });
     }
 
+    it("should render twice when a promise returns an array of actions", function(done) {
+        init(a => {
+            action = a;
+
+            return {
+                initialModel: {
+                    count: 0
+                },
+                update(model) {
+                    return {
+                        Increment1: () => {
+                            model.count++;
+                            return new Promise(resolve => setTimeout(() => resolve(), 100))
+                                .then(() => [ action("Increment2"), action("Increment3") ]);
+                        },
+                        Increment2: () => {
+                            model.count++;
+                        },
+                        Increment3: () => {
+                            model.count++;
+                            setTimeout(() => {
+                                // After last action has been processed
+                                logResult(model.count, patchCount);
+                                expect(model.count).toBe(3);
+                                expect(patchCount).toBe(2);
+                                done();
+                            });
+                        }
+                    }
+                },
+                view
+            };
+        });
+
+        expect(patchCount).toBe(0);
+        action("Increment1")();
+    });
+
     it("should render once following a mix of action arrays and chains", function() {
         const numTestActions = 20; // Must be even due to `i % 2`
 

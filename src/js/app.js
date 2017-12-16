@@ -6,7 +6,7 @@ import counter from "./components/counter";
 
 main(
     h("div.container", [
-        counter({ start: -1 }),
-        counter({ start: 2 })
+        counter({ start: 0 }),
+        counter({ start: -1 })
     ])
 );

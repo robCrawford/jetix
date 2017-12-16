@@ -5,7 +5,7 @@
 import type { Config } from "../lib/muv";
 import { init } from "../lib/muv";
 import { h } from "../lib/vdom";
-import message from "./message";
+import notification from "./notification";
 
 
 type Props = {|
@@ -14,16 +14,15 @@ type Props = {|
 
 type Model = {|
     counter: number;
-    highlight: boolean;
-    errors: string;
+    warning: string;
 |};
 
 type Msg =
     "Increment" |
     "Decrement" |
-    "Highlight" |
     "Validate" |
-    "SetErrors";
+    "SetWarning" |
+    "ClearWarning";
 
 
 export default (props: Props) =>
@@ -32,8 +31,7 @@ export default (props: Props) =>
 
         initialModel: {
             counter: props.start,
-            highlight: isEven(props.start),
-            errors: ""
+            warning: ""
         },
 
         initialAction:
@@ -45,47 +43,47 @@ export default (props: Props) =>
             return {
                 Increment: (step: number) => {
                     model.counter += step;
-                    return [
-                        action("Highlight"),
-                        action("Validate")
-                    ];
+                    return action("Validate");
                 },
                 Decrement: (step: number) => {
                     model.counter -= step;
                     return action("Validate");
                 },
-                Highlight: () => {
-                    model.highlight = isEven(model.counter);
-                },
                 Validate: () => {
-                    model.errors = "";
-                    // Async
-                    return validateCount(model.counter)
-                        .then(e => action("SetErrors", e));
+                    return [
+                        action("ClearWarning"),
+                        // Async
+                        validateCount(model.counter)
+                            .then(e => action("SetWarning", e))
+                    ];
                 },
-                SetErrors: (text: string) => {
-                    model.errors = text;
+                SetWarning: (text: string) => {
+                    model.warning = text;
+                },
+                ClearWarning: () => {
+                    model.warning = "";
                 }
             };
         },
 
         view(model) {
             return h("div.counter", [
-                h('button',
+                h("button",
                     { on: { click: action("Increment", 1) } },
                     "+"),
-                h('div',
-                    { class: { highlight: model.highlight } },
-                    String(model.counter)),
-                h('button',
-                    { on: { click: action("Decrement", 2) } },
+                h("div", String(model.counter)),
+                h("button",
+                    { on: { click: action("Decrement", 1) } },
                     "-"),
 
-                // Child component
-                model.errors.length ?
-                    message({ text: model.errors }) :
+                model.warning.length ?
+                    // Child component - `notification` module
+                    notification({
+                        text: model.warning,
+                        dismissAction: action("ClearWarning")
+                    }) :
                     ""
-            ]);
+                ]);
         }
 
     }: Config<Model, Msg>)
@@ -93,10 +91,6 @@ export default (props: Props) =>
 
 
 // Export for tests
-export function isEven(n: number): boolean {
-    return !(n % 2);
-}
-
 export function isNegative(n: number): boolean {
     return n < 0;
 }
