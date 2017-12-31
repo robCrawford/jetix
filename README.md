@@ -6,7 +6,7 @@ A `Model`, `Update`, `View` pattern for ES6 components, inspired by [The Elm Arc
 - Model freeze/clone cycle (removed in prod for speed)
 - Optimised for minimal number of renders ([tests](https://github.com/robCrawford/es6-muv/blob/master/src/test/lib/muvSpec.js))
 
-The [MUV lib](https://github.com/robCrawford/es6-muv/blob/master/src/js/lib/muv.js) itself is trivially small, the aim being to provide type-safe wiring and nothing else.  
+The [MUV lib](https://github.com/robCrawford/es6-muv/blob/master/src/js/lib/muv.js) itself is very small, the aim being to provide type-safe wiring and nothing else.  
 This project configuration uses [Snabbdom](https://github.com/snabbdom/snabbdom) VDOM, ES6 modules, Flow, Sass, and Karma.  
 
 ```
@@ -57,33 +57,31 @@ export default (props: Props) =>
         initialAction:
             action("Validate"),
 
-        update(model) {
+        update: {
             // A handler updates `model` and returns any next action(s),
             // or a `Promise` that resolves with next action(s)
-            return {
-                Increment: (step: number) => {
-                    model.counter += step;
-                    return action("Validate");
-                },
-                Decrement: (step: number) => {
-                    model.counter -= step;
-                    return action("Validate");
-                },
-                Validate: () => {
-                    return [
-                        action("ClearWarning"),
-                        // Async
-                        validateCount(model.counter)
-                            .then(e => action("SetWarning", e))
-                    ];
-                },
-                SetWarning: (text: string) => {
-                    model.warning = text;
-                },
-                ClearWarning: () => {
-                    model.warning = "";
-                }
-            };
+            Increment: (model, step: number) => {
+                model.counter += step;
+                return action("Validate");
+            },
+            Decrement: (model, step: number) => {
+                model.counter -= step;
+                return action("Validate");
+            },
+            Validate: model => {
+                return [
+                    action("ClearWarning"),
+                    // Async
+                    validateCount(model.counter)
+                        .then(text => action("SetWarning", text))
+                ];
+            },
+            SetWarning: (model, text: string) => {
+                model.warning = text;
+            },
+            ClearWarning: model => {
+                model.warning = "";
+            }
         },
 
         view(model) {

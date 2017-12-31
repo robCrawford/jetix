@@ -28,13 +28,11 @@ export default (props: Props) =>
             show: true
         },
 
-        update(model) {
-            return {
-                Hide: () => {
-                    model.show = false;
-                    return props.dismissAction;
-                }
-            };
+        update: {
+            Hide: model => {
+                model.show = false;
+                return props.dismissAction;
+            }
         },
 
         view(model) {

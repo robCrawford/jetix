@@ -13,13 +13,10 @@ type Next =
 export type Action<msg> =
     (tag: msg, ...data: any[]) => Thunk;
 
-export type Handlers<msg> =
-    { +[tag: msg]: (...data: any[]) => Next; };
-
 export type Config<a, msg> = {|
     +initialModel: a,
     +initialAction?: Next,
-    +update: (model: a) => Handlers<msg>,
+    +update: { +[tag: msg]: (a, ...data: any[]) => Next },
     +view: (model: a) => void
 |}
 
@@ -37,8 +34,8 @@ export function init<a, msg>(getConfig: Action<msg> => Config<a, msg>) {
     function update(tag: msg, data: any[]): void {
         // Lines marked `@Dev-only` are removed by `prod` build
         model = clone(model); // @Dev-only
-        const next = config.update(model)[tag]
-            .apply(null, data);
+        const next = config.update[tag]
+            .apply(null, [model, ...data]);
         deepFreeze(model); // @Dev-only
         run(next);
     }

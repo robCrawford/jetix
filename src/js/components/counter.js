@@ -37,33 +37,31 @@ export default (props: Props) =>
         initialAction:
             action("Validate"),
 
-        update(model) {
+        update: {
             // A handler updates `model` and returns any next action(s),
             // or a `Promise` that resolves with next action(s)
-            return {
-                Increment: (step: number) => {
-                    model.counter += step;
-                    return action("Validate");
-                },
-                Decrement: (step: number) => {
-                    model.counter -= step;
-                    return action("Validate");
-                },
-                Validate: () => {
-                    return [
-                        action("ClearWarning"),
-                        // Async
-                        validateCount(model.counter)
-                            .then(e => action("SetWarning", e))
-                    ];
-                },
-                SetWarning: (text: string) => {
-                    model.warning = text;
-                },
-                ClearWarning: () => {
-                    model.warning = "";
-                }
-            };
+            Increment: (model, step: number) => {
+                model.counter += step;
+                return action("Validate");
+            },
+            Decrement: (model, step: number) => {
+                model.counter -= step;
+                return action("Validate");
+            },
+            Validate: model => {
+                return [
+                    action("ClearWarning"),
+                    // Async
+                    validateCount(model.counter)
+                        .then(text => action("SetWarning", text))
+                ];
+            },
+            SetWarning: (model, text: string) => {
+                model.warning = text;
+            },
+            ClearWarning: model => {
+                model.warning = "";
+            }
         },
 
         view(model) {

@@ -4,6 +4,10 @@ import * as vdom from "../../js/lib/vdom";
 describe("Model, Update, View", function() {
     let patchCount, model, action;
 
+    const initialModel = {
+        count: 0
+    };
+
     function view(m) {
         model = m;
     }
@@ -20,26 +24,21 @@ describe("Model, Update, View", function() {
 
         init(a => {
             action = a;
+            const handlers = {};
+
+            for (let i = 1; i < numTestActions; i++) {
+                handlers["Increment" + i] =
+                    model => {
+                        model.count++;
+                        return action("Increment" + (i+1));
+                    };
+            }
+            handlers["Increment" + numTestActions] =
+                model => {model.count++;};
 
             return {
-                initialModel: {
-                    count: 0
-                },
-                update(model) {
-                    const handlers = {};
-
-                    for (let i = 1; i < numTestActions; i++) {
-                        handlers["Increment" + i] =
-                            () => {
-                                model.count++;
-                                return action("Increment" + (i+1));
-                            };
-                    }
-                    handlers["Increment" + numTestActions] =
-                        () => {model.count++;};
-
-                    return handlers;
-                },
+                initialModel,
+                update: handlers,
                 view
             };
         });
@@ -56,27 +55,22 @@ describe("Model, Update, View", function() {
 
         init(a => {
             action = a;
+            const handlers = {};
+            const incrementRetActions = [];
+
+            for (let i = 1; i <= numTestActions; i++) {
+                handlers["Increment" + i] =
+                    model => {
+                        model.count++;
+                    };
+                incrementRetActions.push(action("Increment" + i));
+            }
+            handlers["Increment"] =
+                model => incrementRetActions;
 
             return {
-                initialModel: {
-                    count: 0
-                },
-                update(model) {
-                    const handlers = {};
-                    const incrementRetActions = [];
-
-                    for (let i = 1; i <= numTestActions; i++) {
-                        handlers["Increment" + i] =
-                            () => {
-                                model.count++;
-                            };
-                        incrementRetActions.push(action("Increment" + i));
-                    }
-                    handlers["Increment"] =
-                        () => incrementRetActions;
-
-                    return handlers;
-                },
+                initialModel,
+                update: handlers,
                 view
             };
         });
@@ -104,45 +98,40 @@ describe("Model, Update, View", function() {
     function runActionsWithPromise(numTestActions, expectedPatchCount, done, initialAction) {
         init(a => {
             action = a;
+            const handlers = {};
+
+            for (let i = 1; i < numTestActions; i++) {
+                handlers["Increment" + i] =
+                    model => {
+                        model.count++;
+                        return action("Increment" + (i+1));
+                    };
+            }
+            handlers["Increment" + numTestActions] =
+                model => {
+                    model.count++;
+                    setTimeout(() => {
+                        // After last action has been processed
+                        logResult(model.count, patchCount);
+                        expect(model.count).toBe(numTestActions);
+                        expect(patchCount).toBe(expectedPatchCount);
+                        done();
+                    });
+                };
+
+            // Overwrite middle action with promise
+            const midIndex = numTestActions/2;
+            handlers["Increment" + midIndex] =
+                model => {
+                    model.count++;
+                    return new Promise(resolve => setTimeout(() => resolve(), 100))
+                        .then(() => action("Increment" + (midIndex + 1)));
+                };
 
             return {
-                initialModel: {
-                    count: 0
-                },
+                initialModel,
                 initialAction: initialAction ? a(initialAction) : undefined,
-                update(model) {
-                    const handlers = {};
-
-                    for (let i = 1; i < numTestActions; i++) {
-                        handlers["Increment" + i] =
-                            () => {
-                                model.count++;
-                                return action("Increment" + (i+1));
-                            };
-                    }
-                    handlers["Increment" + numTestActions] =
-                        () => {
-                            model.count++;
-                            setTimeout(() => {
-                                // After last action has been processed
-                                logResult(model.count, patchCount);
-                                expect(model.count).toBe(numTestActions);
-                                expect(patchCount).toBe(expectedPatchCount);
-                                done();
-                            });
-                        };
-
-                    // Overwrite middle action with promise
-                    const midIndex = numTestActions/2;
-                    handlers["Increment" + midIndex] =
-                        () => {
-                            model.count++;
-                            return new Promise(resolve => setTimeout(() => resolve(), 100))
-                                .then(() => action("Increment" + (midIndex + 1)));
-                        };
-
-                    return handlers;
-                },
+                update: handlers,
                 view
             };
         });
@@ -153,29 +142,25 @@ describe("Model, Update, View", function() {
             action = a;
 
             return {
-                initialModel: {
-                    count: 0
-                },
-                update(model) {
-                    return {
-                        Increment1: () => {
-                            model.count++;
-                            return new Promise(resolve => setTimeout(() => resolve(), 100))
-                                .then(() => [ action("Increment2"), action("Increment3") ]);
-                        },
-                        Increment2: () => {
-                            model.count++;
-                        },
-                        Increment3: () => {
-                            model.count++;
-                            setTimeout(() => {
-                                // After last action has been processed
-                                logResult(model.count, patchCount);
-                                expect(model.count).toBe(3);
-                                expect(patchCount).toBe(2);
-                                done();
-                            });
-                        }
+                initialModel,
+                update: {
+                    Increment1: model => {
+                        model.count++;
+                        return new Promise(resolve => setTimeout(() => resolve(), 100))
+                            .then(() => [ action("Increment2"), action("Increment3") ]);
+                    },
+                    Increment2: model => {
+                        model.count++;
+                    },
+                    Increment3: model => {
+                        model.count++;
+                        setTimeout(() => {
+                            // After last action has been processed
+                            logResult(model.count, patchCount);
+                            expect(model.count).toBe(3);
+                            expect(patchCount).toBe(2);
+                            done();
+                        });
                     }
                 },
                 view
@@ -216,74 +201,69 @@ describe("Model, Update, View", function() {
     function runMixedActions(numTestActions, initialAction) {
         init(a => {
             action = a;
+            const handlers = {};
+            const actionsArray1 = [];
+            const actionsArray2 = [];
+
+            // Array of single increment actions that return nothing
+            for (let i = 1; i <= numTestActions; i++) {
+                handlers["IncrementA1-" + i] =
+                    model => {
+                        model.count++;
+                    };
+                actionsArray1.push(action("IncrementA1-" + i));
+            }
+            // Series of increment actions "IncrementS1-1" - "IncrementS1-19"
+            for (let i = 1; i < numTestActions; i++) {
+                handlers["IncrementS1-" + i] =
+                    model => {
+                        model.count++;
+                        return action("IncrementS1-" + (i+1));
+                    };
+            }
+            handlers["IncrementS1-" + numTestActions] =
+                model => {
+                    // "IncrementS1-20" returns `actionsArray1` array
+                    model.count++;
+                    return actionsArray1;
+                };
+            // Series of increment actions "IncrementS2-1" - "IncrementS2-10"
+            for (let i = 1; i < numTestActions/2; i++) {
+                handlers["IncrementS2-" + i] =
+                    model => {
+                        model.count++;
+                        return action("IncrementS2-" + (i+1));
+                    };
+            }
+            handlers["IncrementS2-" + numTestActions/2] =
+                model => {
+                    model.count++;
+                };
+
+            // "IncrementA2-Init" returns `actionsArray2` array
+            for (let i = 1; i <= numTestActions; i++) {
+                handlers["IncrementA2-" + i] =
+                    model => {
+                        model.count++;
+                        // Half return chain "IncrementS1-1" - "IncrementS1-20",
+                        // where "IncrementS1-20" returns `actionsArray1`
+                        if (i % 2) {
+                            return action("IncrementS1-1");
+                        }
+                        // Half return chain "IncrementS2-1" - "IncrementS2-10"
+                        else {
+                            return action("IncrementS2-1");
+                        }
+                    };
+                actionsArray2.push(action("IncrementA2-" + i));
+            }
+            handlers["IncrementA2-Init"] =
+                model => actionsArray2;
 
             return {
-                initialModel: {
-                    count: 0
-                },
+                initialModel,
                 initialAction: initialAction ? a(initialAction) : undefined,
-                update(model) {
-                    const handlers = {};
-                    const actionsArray1 = [];
-                    const actionsArray2 = [];
-
-                    // Array of single increment actions that return nothing
-                    for (let i = 1; i <= numTestActions; i++) {
-                        handlers["IncrementA1-" + i] =
-                            () => {
-                                model.count++;
-                            };
-                        actionsArray1.push(action("IncrementA1-" + i));
-                    }
-                    // Series of increment actions "IncrementS1-1" - "IncrementS1-19"
-                    for (let i = 1; i < numTestActions; i++) {
-                        handlers["IncrementS1-" + i] =
-                            () => {
-                                model.count++;
-                                return action("IncrementS1-" + (i+1));
-                            };
-                    }
-                    handlers["IncrementS1-" + numTestActions] =
-                        () => {
-                            // "IncrementS1-20" returns `actionsArray1` array
-                            model.count++;
-                            return actionsArray1;
-                        };
-                    // Series of increment actions "IncrementS2-1" - "IncrementS2-10"
-                    for (let i = 1; i < numTestActions/2; i++) {
-                        handlers["IncrementS2-" + i] =
-                            () => {
-                                model.count++;
-                                return action("IncrementS2-" + (i+1));
-                            };
-                    }
-                    handlers["IncrementS2-" + numTestActions/2] =
-                        () => {
-                            model.count++;
-                        };
-
-                    // "IncrementA2-Init" returns `actionsArray2` array
-                    for (let i = 1; i <= numTestActions; i++) {
-                        handlers["IncrementA2-" + i] =
-                            () => {
-                                model.count++;
-                                // Half return chain "IncrementS1-1" - "IncrementS1-20",
-                                // where "IncrementS1-20" returns `actionsArray1`
-                                if (i % 2) {
-                                    return action("IncrementS1-1");
-                                }
-                                // Half return chain "IncrementS2-1" - "IncrementS2-10"
-                                else {
-                                    return action("IncrementS2-1");
-                                }
-                            };
-                        actionsArray2.push(action("IncrementA2-" + i));
-                    }
-                    handlers["IncrementA2-Init"] =
-                        () => actionsArray2;
-
-                    return handlers;
-                },
+                update: handlers,
                 view
             };
         });
