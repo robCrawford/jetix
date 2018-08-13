@@ -34,8 +34,7 @@ export default (props: Props) =>
             warning: ""
         },
 
-        initialAction:
-            action("Validate"),
+        initialAction: action("Validate"),
 
         update: {
             // A handler updates `model` and returns any next action(s),

@@ -3,6 +3,8 @@
   `Model, Update, View` wiring
 */
 import { patch } from "../lib/vdom";
+import { h } from "./vdom";
+import app from "../app";
 
 
 type Thunk = () => void;
@@ -76,16 +78,12 @@ export function init<a, msg>(getConfig: Action<msg> => Config<a, msg>) {
     return componentRoot = config.view(model);
 }
 
-
-export function main(rootElement: any) {
-    document.addEventListener("DOMContentLoaded", () => {
-        patch(
-            document.getElementById("app"),
-            rootElement
-        );
-    });
-}
-
+document.addEventListener("DOMContentLoaded", () => {
+    patch(
+        document.getElementById("app"),
+        h("div#app", [ app() ])
+    );
+});
 
 function clone(o: any) {
     return JSON.parse(JSON.stringify(o));

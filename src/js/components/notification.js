@@ -28,6 +28,8 @@ export default (props: Props) =>
             show: true
         },
 
+        initialAction: undefined,
+
         update: {
             Hide: model => {
                 model.show = false;

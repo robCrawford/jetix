@@ -11,6 +11,7 @@
     "rules": {
         "no-console": 0,
         "flowtype/no-types-missing-file-annotation": 0,
+        "no-unused-vars": 0,
         "semi": ["error", "always"]
     },
     "parser": "babel-eslint",
