@@ -25,9 +25,9 @@ type Msg =
     "ClearWarning";
 
 
-export default (props: Props) =>
+export default (id: string, props: Props) =>
 
-    init(action => ({
+    init(id, action => ({
 
         initialModel: {
             counter: props.start,
@@ -39,11 +39,11 @@ export default (props: Props) =>
         update: {
             // A handler updates `model` and returns any next action(s),
             // or a `Promise` that resolves with next action(s)
-            Increment: (model, step: number) => {
+            Increment: (model, { step }: { step: number }) => {
                 model.counter += step;
                 return action("Validate");
             },
-            Decrement: (model, step: number) => {
+            Decrement: (model, { step }: { step: number }) => {
                 model.counter -= step;
                 return action("Validate");
             },
@@ -52,10 +52,10 @@ export default (props: Props) =>
                     action("ClearWarning"),
                     // Async
                     validateCount(model.counter)
-                        .then(text => action("SetWarning", text))
+                        .then(text => action("SetWarning", { text }))
                 ];
             },
-            SetWarning: (model, text: string) => {
+            SetWarning: (model, { text }: { text: string }) => {
                 model.warning = text;
             },
             ClearWarning: model => {
@@ -66,16 +66,16 @@ export default (props: Props) =>
         view(model) {
             return h("div.counter", [
                 h("button",
-                    { on: { click: action("Increment", 1) } },
+                    { on: { click: action("Increment", { step: 1 }) } },
                     "+"),
                 h("div", String(model.counter)),
                 h("button",
-                    { on: { click: action("Decrement", 1) } },
+                    { on: { click: action("Decrement", { step: 1 }) } },
                     "-"),
 
                 model.warning.length ?
                     // Child component - `notification` module
-                    notification({
+                    notification(`${id}-warning`, {
                         text: model.warning,
                         dismissAction: action("ClearWarning")
                     }) :
@@ -83,8 +83,7 @@ export default (props: Props) =>
                 ]);
         }
 
-    }: Config<Model, Msg>)
-);
+    }: Config<Model, Msg>));
 
 
 // Export for tests

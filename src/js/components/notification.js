@@ -20,9 +20,9 @@ type Msg =
     "Hide";
 
 
-export default (props: Props) =>
+export default (id: string, props: Props) =>
 
-    init(action => ({
+    init(id, action => ({
 
         initialModel: {
             show: true

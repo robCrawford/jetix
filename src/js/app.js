@@ -8,25 +8,41 @@ import { h } from "./lib/vdom";
 import counter from "./components/counter";
 
 
-type Model = {};
+type Model = {
+    theme: Theme;
+};
 
-type Msg = "";
+type Msg = "SetTheme";
+
+type Theme = "default" | "dark";
 
 
 export default () =>
 
-    init(action => ({
+    init("root", action => ({
 
-        initialModel: {},
+        initialModel: {
+            theme: "default"
+        },
 
         initialAction: undefined,
 
-        update: {},
+        update: {
+            SetTheme: (model, { theme }: { theme: Theme }) => {
+                model.theme = theme;
+            }
+        },
 
         view(model) {
-            return h("div.page", [
-                counter({ start: 0 }),
-                counter({ start: -1 })
+            return h("div.page." + model.theme, [
+                counter("counter-0", { start: 0 }),
+                counter("counter-1", { start: -1 }),
+                h("button",
+                    { on: { click: action("SetTheme", { theme: "default" }) } },
+                    "Light theme"),
+                h("button",
+                    { on: { click: action("SetTheme", { theme: "dark" }) } },
+                    "Dark theme")
             ]);
         }
 

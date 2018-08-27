@@ -3,7 +3,7 @@
   `Model, Update, View` wiring
 */
 import { patch } from "../lib/vdom";
-import { h } from "./vdom";
+import { h, setHook } from "./vdom";
 import app from "../app";
 
 
@@ -13,36 +13,40 @@ type Next =
     Thunk | Promise<any> | Array<Thunk | Promise<any>> | void;
 
 export type Action<msg> =
-    (tag: msg, ...data: any[]) => Thunk;
+    (tag: msg, data?: Object) => Thunk;
 
 export type Config<a, msg> = {|
     +initialModel: a,
     +initialAction?: Next,
-    +update: { +[tag: msg]: (a, ...data: any[]) => Next },
+    +update: { +[tag: msg]: (a, data: Object) => Next },
     +view: (model: a) => void
 |}
 
 
-export function init<a, msg>(getConfig: Action<msg> => Config<a, msg>) {
+export function init<a, msg>(id: string, getConfig: Action<msg> => Config<a, msg>) {
+
+    let componentRoot = renderById(id);
+    if (componentRoot) {
+        return componentRoot;
+    }
+
     const config = getConfig(action);
     let model: a = config.initialModel;
-    let componentRoot;
     let noRender: number = 0;
 
-    function action(tag, ...data) {
+    function action(tag, data = {}) {
         return () => update(tag, data);
     }
 
-    function update(tag: msg, data: any[]): void {
+    function update(tag: msg, data: Object) {
         // Lines marked `@Dev-only` are removed by `prod` build
         model = clone(model); // @Dev-only
-        const next = config.update[tag]
-            .apply(null, [model, ...data]);
+        const next = config.update[tag].apply(null, [model, data]);
         deepFreeze(model); // @Dev-only
         run(next);
     }
 
-    function run(next: Next): void {
+    function run(next: Next) {
         if (!next) {
             render();
         }
@@ -61,13 +65,15 @@ export function init<a, msg>(getConfig: Action<msg> => Config<a, msg>) {
         }
     }
 
-    function render(): void {
+    function render() {
         if (!noRender) {
             patch(
                 componentRoot,
                 componentRoot = config.view(model)
             );
+            setRefs(componentRoot, id, render);
         }
+        return componentRoot;
     }
 
     if (config.initialAction) {
@@ -75,7 +81,10 @@ export function init<a, msg>(getConfig: Action<msg> => Config<a, msg>) {
         run(config.initialAction);
         noRender--;
     }
-    return componentRoot = config.view(model);
+
+    componentRoot = config.view(model);
+    setRefs(componentRoot, id, render);
+    return componentRoot;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -85,18 +94,35 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 });
 
-function clone(o: any) {
+function renderById(id: string) {
+    const domNode: ?Object = document.getElementById(id);
+    if (domNode) {
+        return domNode.render();
+    }
+}
+
+function setRefs(vnode: *, id: string, render: () => *) {
+    // Run after all sync patches
+    setTimeout(() => {
+        if (vnode) {
+            vnode.elm.id = id;
+            vnode.elm.render = render;
+        }
+    });
+}
+
+function clone(o: *) {
     return JSON.parse(JSON.stringify(o));
 }
 
-function deepFreeze(o: any) {
+function deepFreeze(o: *) {
     Object.freeze(o);
     Object.getOwnPropertyNames(o).forEach(
         p => {
-            if (o.hasOwnProperty(p)
-                && o[p] !== null
-                && (typeof o[p] === "object" || typeof o[p] === "function")
-                && !Object.isFrozen(o[p])
+            if (o.hasOwnProperty(p) &&
+                o[p] !== null &&
+                (typeof o[p] === "object" || typeof o[p] === "function") &&
+                !Object.isFrozen(o[p])
             ) {
                 deepFreeze(o[p]);
             }
