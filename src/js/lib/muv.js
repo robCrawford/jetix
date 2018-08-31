@@ -2,8 +2,7 @@
   @flow
   `Model, Update, View` wiring
 */
-import { patch } from "../lib/vdom";
-import { h, setHook } from "./vdom";
+import { patch, h } from "./vdom";
 import app from "../app";
 
 
@@ -19,13 +18,30 @@ export type Config<a, msg> = {|
     +initialModel: a,
     +initialAction?: Next,
     +update: { +[tag: msg]: (a, data: Object) => Next },
-    +view: (model: a) => void
+    +view: (id: string, props: *, model: a) => void
 |}
 
 
-export function init<a, msg>(id: string, getConfig: Action<msg> => Config<a, msg>) {
+export function component<a, msg>(
+    getConfigFromProps: (Action<msg>, props: *) => Config<a, msg>
+) {
+    // Will be called by parent markup e.g. `counter("counter-0", { start: 0 })`
+    return (id: string, props: *) => {
+        // Calls MUV init() each render, passing in a callback that receives `action`
+        return init(id, props, action => {
+            // Run passed in `getConfigFromProps` function
+            return getConfigFromProps(action, props);
+        });
+    };
+}
 
-    let componentRoot = renderById(id);
+export function init<a, msg>(
+    id: string,
+    props: *,
+    getConfig: Action<msg> => Config<a, msg>
+) {
+    // If component already exists, just run render() again
+    let componentRoot = renderById(id, props);
     if (componentRoot) {
         return componentRoot;
     }
@@ -48,7 +64,7 @@ export function init<a, msg>(id: string, getConfig: Action<msg> => Config<a, msg
 
     function run(next: Next) {
         if (!next) {
-            render();
+            render(props);
         }
         else if (typeof next === "function") {
             next();
@@ -57,19 +73,19 @@ export function init<a, msg>(id: string, getConfig: Action<msg> => Config<a, msg
             noRender++;
             next.forEach(run);
             noRender--;
-            render();
+            render(props);
         }
         else if (typeof next.then === "function") {
             next.then(run);
-            render(); // End of sync chain
+            render(props); // End of sync chain
         }
     }
 
-    function render() {
+    function render(props) {
         if (!noRender) {
             patch(
                 componentRoot,
-                componentRoot = config.view(model)
+                componentRoot = config.view(id, props, model)
             );
             setRefs(componentRoot, id, render);
         }
@@ -82,22 +98,23 @@ export function init<a, msg>(id: string, getConfig: Action<msg> => Config<a, msg
         noRender--;
     }
 
-    componentRoot = config.view(model);
+    componentRoot = config.view(id, props, model);
     setRefs(componentRoot, id, render);
     return componentRoot;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    const rootId = "app";
     patch(
-        document.getElementById("app"),
-        h("div#app", [ app() ])
+        document.getElementById(rootId),
+        app(rootId, { /* Props */ })
     );
 });
 
-function renderById(id: string) {
+function renderById(id: string, props: *) {
     const domNode: ?Object = document.getElementById(id);
-    if (domNode) {
-        return domNode.render();
+    if (domNode && domNode.render) {
+        return domNode.render(props);
     }
 }
 

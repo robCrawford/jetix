@@ -2,8 +2,8 @@
   @flow
   Notification component
 */
-import type { Config } from "../lib/muv";
-import { init } from "../lib/muv";
+import type { Config, Action } from "../lib/muv";
+import { component } from "../lib/muv";
 import { h } from "../lib/vdom";
 
 
@@ -17,35 +17,32 @@ type Model = {|
 |};
 
 type Msg =
-    "Hide";
+    "Dismiss";
 
 
-export default (id: string, props: Props) =>
+export default component((action: Action<Msg>, props: Props) => ({
 
-    init(id, action => ({
+    initialModel: {
+        show: true
+    },
 
-        initialModel: {
-            show: true
-        },
+    initialAction: undefined,
 
-        initialAction: undefined,
-
-        update: {
-            Hide: model => {
-                model.show = false;
-                return props.dismissAction;
-            }
-        },
-
-        view(model) {
-            return h("div.notification",
-                { class: { show: model.show } },
-                [ props.text,
-                    h('button',
-                        { on: { click: action("Hide") } },
-                        "OK")
-                ]);
+    update: {
+        Dismiss: model => {
+            model.show = false;
+            return props.dismissAction;
         }
+    },
 
-    }: Config<Model, Msg>)
-);
+    view(id: string, props: Props, model: Model) {
+        return h("div.notification",
+            { class: { show: model.show && props.text.length } },
+            [ props.text,
+                h('button',
+                    { on: { click: action("Dismiss") } },
+                    "Dismiss")
+            ]);
+    }
+
+}: Config<Model, Msg>));

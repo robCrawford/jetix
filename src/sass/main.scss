@@ -1,35 +1,55 @@
 html, body {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.page {
+    width: 100%;
+    height: 100%;
     padding: 10px 15px;
     margin: 0;
     font: 12px sans-serif;
-}
-.intro {
-    margin-bottom: 20px;
-}
-.counter {
-    display: inline-block;
-    vertical-align: top;
-    text-align: center;
-    background: #888;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    font-size: 14px;
-    color: #FFF;
-    margin-right: 20px;
 
-    button {
-        margin: 5px;
-        width: 100px;
+    &.default {
+        background:#FFF;
     }
-}
-.notification {
-    display: none;
+    &.dark {
+        background: #444;
+    }
 
-    &.show {
-        display: block;
+    .intro {
+        margin-bottom: 20px;
     }
-    button {
-        width: auto;
+    .counter {
+        display: inline-block;
+        vertical-align: top;
+        text-align: center;
+        background: #84a8c9;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        font-size: 14px;
+        color: #FFF;
+        margin-right: 20px;
+
+        button {
+            margin: 5px;
+            width: 100px;
+        }
+    }
+    &.dark .counter {
+        background: #0b3257;
+    }
+    .notification {
+        display: none;
+
+        &.show {
+            display: block;
+        }
+        button {
+            width: auto;
+        }
     }
 }
