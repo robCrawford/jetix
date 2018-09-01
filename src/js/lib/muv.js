@@ -9,7 +9,7 @@ import app from "../app";
 type Thunk = () => void;
 
 type Next =
-    Thunk | Promise<any> | Array<Thunk | Promise<any>> | void;
+    Thunk | Promise<*> | Array<Thunk | Promise<*>> | void;
 
 export type Action<msg> =
     (tag: msg, data?: Object) => Thunk;
@@ -35,11 +35,13 @@ export function component<a, msg>(
     };
 }
 
-export function init<a, msg>(
+function init<a, msg>(
     id: string,
     props: *,
     getConfig: Action<msg> => Config<a, msg>
 ) {
+    deepFreeze(props); // @Dev-only
+
     // If component already exists, just run render() again
     let componentRoot = renderById(id, props);
     if (componentRoot) {
@@ -58,7 +60,7 @@ export function init<a, msg>(
         // Lines marked `@Dev-only` are removed by `prod` build
         model = clone(model); // @Dev-only
         const next = config.update[tag].apply(null, [model, data]);
-        deepFreeze(model); // @Dev-only
+        deepFreeze(model);    // @Dev-only
         run(next);
     }
 
@@ -118,12 +120,14 @@ function renderById(id: string, props: *) {
     }
 }
 
-function setRefs(vnode: *, id: string, render: () => *) {
+function setRefs(componentRoot: *, id: string, render: () => *) {
     // Run after all sync patches
     setTimeout(() => {
-        if (vnode) {
-            vnode.elm.id = id;
-            vnode.elm.render = render;
+        if (componentRoot) {
+        // Set `id` and a handle to the `render()` closure on DOM element
+        // This creates a simple state/id pairing, and the VDOM lib takes care of clearing memory
+            componentRoot.elm.id = id;
+            componentRoot.elm.render = render;
         }
     });
 }

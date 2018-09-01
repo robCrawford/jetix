@@ -4,6 +4,7 @@
   "description": "ES6 Model Update View",
   "main": "app.js",
   "scripts": {
+    "start": "gulp",
     "test": "./node_modules/.bin/karma start"
   },
   "author": "Rob Crawford",
