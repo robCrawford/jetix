@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "lib": ["dom", "es2017"],
+        "target": "ES5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "baseUrl": "../../"
+    }
+}

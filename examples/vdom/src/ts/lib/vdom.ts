@@ -1,15 +1,18 @@
 /*
   A wrapper around `https://github.com/snabbdom/snabbdom`
+  with html functions from `https://github.com/ohanhi/hyperscript-helpers`
 */
-const snabbdom = require("snabbdom");
-const patch = snabbdom.init([
-    require("snabbdom/modules/class").default,
-    require("snabbdom/modules/props").default,
-    require("snabbdom/modules/eventlisteners").default
-]);
-const h = require("snabbdom/h").default;
+import { init, h } from "snabbdom";
+import sClass from "snabbdom/modules/class";
+import sAttr from "snabbdom/modules/attributes";
+import sProps from "snabbdom/modules/props";
+import sEvents from "snabbdom/modules/eventlisteners";
+import hyperscriptHelpers from 'hyperscript-helpers';
 
-function setHook(vnode, hookName, callback) {
+export const patch = init([ sClass, sAttr, sProps, sEvents ]);
+export const html = hyperscriptHelpers(h);
+
+export function setHook(vnode, hookName, callback) {
     // https://github.com/snabbdom/snabbdom#hooks
     // init        a vnode has been added                                vnode
     // create      a DOM element has been created based on a vnode       emptyVnode, vnode
@@ -19,9 +22,9 @@ function setHook(vnode, hookName, callback) {
     // postpatch   an element has been patched                           oldVnode, vnode
     // destroy     an element is directly or indirectly being removed    vnode
     // remove      an element is directly being removed from the DOM     vnode, removeCallback
-    vnode.data = vnode.data || {};
-    vnode.data.hook = vnode.data.hook || {};
-    vnode.data.hook[hookName] = callback;
+    if (vnode) {
+        vnode.data = vnode.data || {};
+        vnode.data.hook = vnode.data.hook || {};
+        vnode.data.hook[hookName] = callback;
+    }
 }
-
-export { patch, h, setHook };

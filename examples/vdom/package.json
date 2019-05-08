@@ -1,11 +1,9 @@
 {
-  "name": "jetix",
+  "name": "jetix-vdom-example",
   "version": "0.1.0",
-  "description": "A minimal ES6 component pattern for managing state with pure functions",
-  "main": "jetix.ts",
-  "scripts": {
-    "build": "rm -f dist/* && cp jetix.ts dist/jetix.ts && replace-in-file /.*@devBuild.*/g \"\" dist/jetix.ts --isRegex"
-  },
+  "description": "Jetix VDOM example",
+  "main": "src/ts/app.js",
+  "scripts": {},
   "author": "Rob Crawford",
   "repository": {
     "type": "git",
@@ -20,5 +18,8 @@
     "replace-in-file": "^4.0.0",
     "typescript": "^3.4.5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "navigo": "^7.1.2",
+    "snabbdom": "^0.7.3"
+  }
 }

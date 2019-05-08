@@ -1,15 +1,13 @@
-import { init, main } from "../../js/lib/muv";
+import { renderComponent } from "../../js/lib/jetix";
 import * as vdom from "../../js/lib/vdom";
 
-describe("Model, Update, View", function() {
-    let patchCount, model, action;
+describe("Jetix", function() {
+    let patchCount, state, action;
+    let componentId = 0;
+    const getId = () => `_${componentId++}`;
 
-    const initialModel = {
-        count: 0
-    };
-
-    function view(m) {
-        model = m;
+    function view(id, curState, props) {
+        state = curState;
     }
 
     beforeEach(function() {
@@ -22,63 +20,67 @@ describe("Model, Update, View", function() {
     it("should render once following a chain of actions", function() {
         const numTestActions = 20;
 
-        init(a => {
+        renderComponent(getId(), {}, a => {
             action = a;
-            const handlers = {};
+            const actions = {};
 
             for (let i = 1; i < numTestActions; i++) {
-                handlers["Increment" + i] =
-                    model => {
-                        model.count++;
-                        return action("Increment" + (i+1));
+                actions["Increment" + i] =
+                    (_, state) => {
+                        state.count++;
+                        return { state, next: action("Increment" + (i+1)) };
                     };
             }
-            handlers["Increment" + numTestActions] =
-                model => {model.count++;};
+            actions["Increment" + numTestActions] =
+                (_, state) => {
+                    state.count++;
+                    return { state };
+                };
 
             return {
-                initialModel,
-                update: handlers,
+                state: () => ({ count: 0 }),
+                actions,
                 view
             };
         });
 
         expect(patchCount).toBe(0);
         action("Increment1")();
-        logResult(model.count, patchCount);
-        expect(model.count).toBe(numTestActions);
+        logResult(state.count, patchCount);
+        expect(state.count).toBe(numTestActions);
         expect(patchCount).toBe(1);
     });
 
     it("should render once following an array of actions", function() {
         const numTestActions = 20;
 
-        init(a => {
+        renderComponent(getId(), {}, a => {
             action = a;
-            const handlers = {};
+            const actions = {};
             const incrementRetActions = [];
 
             for (let i = 1; i <= numTestActions; i++) {
-                handlers["Increment" + i] =
-                    model => {
-                        model.count++;
+                actions["Increment" + i] =
+                    (_, state) => {
+                        state.count++;
+                        return { state };
                     };
                 incrementRetActions.push(action("Increment" + i));
             }
-            handlers["Increment"] =
-                model => incrementRetActions;
+            actions["Increment"] =
+                (_, state) => ({ state, next: incrementRetActions });
 
             return {
-                initialModel,
-                update: handlers,
+                state: () => ({ count: 0 }),
+                actions,
                 view
             };
         });
 
         expect(patchCount).toBe(0);
         action("Increment")();
-        logResult(model.count, patchCount);
-        expect(model.count).toBe(numTestActions);
+        logResult(state.count, patchCount);
+        expect(state.count).toBe(numTestActions);
         expect(patchCount).toBe(1);
     });
 
@@ -92,75 +94,84 @@ describe("Model, Update, View", function() {
     it("should render once when initial action chain contains a promise", function(done) {
         const numTestActions = 20;
         runActionsWithPromise(numTestActions, 1, done, "Increment1"); // 1 render after promise
-        expect(patchCount).toBe(0); // No render after initialAction
+        expect(patchCount).toBe(0); // No render after init
     });
 
     function runActionsWithPromise(numTestActions, expectedPatchCount, done, initialAction) {
-        init(a => {
+        renderComponent(getId(), {}, a => {
             action = a;
-            const handlers = {};
+            const actions = {};
 
             for (let i = 1; i < numTestActions; i++) {
-                handlers["Increment" + i] =
-                    model => {
-                        model.count++;
-                        return action("Increment" + (i+1));
+                actions["Increment" + i] =
+                    (_, state) => {
+                        state.count++;
+                        return { state, next: action("Increment" + (i+1)) };
                     };
             }
-            handlers["Increment" + numTestActions] =
-                model => {
-                    model.count++;
+            actions["Increment" + numTestActions] =
+                (_, state) => {
+                    state.count++;
                     setTimeout(() => {
                         // After last action has been processed
-                        logResult(model.count, patchCount);
-                        expect(model.count).toBe(numTestActions);
+                        logResult(state.count, patchCount);
+                        expect(state.count).toBe(numTestActions);
                         expect(patchCount).toBe(expectedPatchCount);
                         done();
                     });
+                    return { state };
                 };
 
             // Overwrite middle action with promise
             const midIndex = numTestActions/2;
-            handlers["Increment" + midIndex] =
-                model => {
-                    model.count++;
-                    return new Promise(resolve => setTimeout(() => resolve(), 100))
-                        .then(() => action("Increment" + (midIndex + 1)));
+            actions["Increment" + midIndex] =
+                (_, state) => {
+                    state.count++;
+                    return {
+                        state,
+                        next: new Promise(resolve => setTimeout(() => resolve(), 100))
+                            .then(() => action("Increment" + (midIndex + 1)))
+                    };
                 };
 
             return {
-                initialModel,
-                initialAction: initialAction ? a(initialAction) : undefined,
-                update: handlers,
+                state: () => ({ count: 0 }),
+                init: initialAction ? a(initialAction) : undefined,
+                actions,
                 view
             };
         });
     }
 
     it("should render twice when a promise returns an array of actions", function(done) {
-        init(a => {
+        renderComponent(getId(), {}, a => {
             action = a;
 
             return {
-                initialModel,
-                update: {
-                    Increment1: model => {
-                        model.count++;
-                        return new Promise(resolve => setTimeout(() => resolve(), 100))
-                            .then(() => [ action("Increment2"), action("Increment3") ]);
+                state: () => ({ count: 0 }),
+                actions: {
+                    Increment1: (_, state) => {
+                        state.count++;
+                        return {
+                            state,
+                            next: new Promise(resolve => setTimeout(() => resolve(), 100))
+                                .then(() => [ action("Increment2"), action("Increment3") ])
+                        };
                     },
-                    Increment2: model => {
-                        model.count++;
+                    Increment2: (_, state) => {
+                        state.count++;
+                        return { state };
                     },
-                    Increment3: model => {
-                        model.count++;
+                    Increment3: (_, state) => {
+                        state.count++;
                         setTimeout(() => {
                             // After last action has been processed
-                            logResult(model.count, patchCount);
-                            expect(model.count).toBe(3);
+                            logResult(state.count, patchCount);
+                            expect(state.count).toBe(3);
                             expect(patchCount).toBe(2);
                             done();
                         });
+                        return { state };
                     }
                 },
                 view
@@ -178,8 +189,8 @@ describe("Model, Update, View", function() {
         runMixedActions(numTestActions);
         action("IncrementA2-Init")();
 
-        logResult(model.count, patchCount);
-        expect(model.count).toBe(
+        logResult(state.count, patchCount);
+        expect(state.count).toBe(
             getMixedActionsIncr(numTestActions)
         );
         expect(patchCount).toBe(1);
@@ -191,79 +202,90 @@ describe("Model, Update, View", function() {
         expect(patchCount).toBe(0);
         runMixedActions(numTestActions, "IncrementA2-Init");
 
-        logResult(model.count, patchCount);
-        expect(model.count).toBe(
+        logResult(state.count, patchCount);
+        expect(state.count).toBe(
             getMixedActionsIncr(numTestActions)
         );
         expect(patchCount).toBe(0);
     });
 
     function runMixedActions(numTestActions, initialAction) {
-        init(a => {
+        renderComponent(getId(), {}, a => {
             action = a;
-            const handlers = {};
+            const actions = {};
             const actionsArray1 = [];
             const actionsArray2 = [];
 
             // Array of single increment actions that return nothing
             for (let i = 1; i <= numTestActions; i++) {
-                handlers["IncrementA1-" + i] =
-                    model => {
-                        model.count++;
+                actions["IncrementA1-" + i] =
+                    (_, state) => {
+                        state.count++;
+                        return { state };
                     };
                 actionsArray1.push(action("IncrementA1-" + i));
             }
             // Series of increment actions "IncrementS1-1" - "IncrementS1-19"
             for (let i = 1; i < numTestActions; i++) {
-                handlers["IncrementS1-" + i] =
-                    model => {
-                        model.count++;
-                        return action("IncrementS1-" + (i+1));
+                actions["IncrementS1-" + i] =
+                    (_, state) => {
+                        state.count++;
+                        return {
+                            state,
+                            next: action("IncrementS1-" + (i+1))
+                        };
                     };
             }
-            handlers["IncrementS1-" + numTestActions] =
-                model => {
+            actions["IncrementS1-" + numTestActions] =
+                (_, state) => {
                     // "IncrementS1-20" returns `actionsArray1` array
-                    model.count++;
-                    return actionsArray1;
+                    state.count++;
+                    return {
+                        state,
+                        next: actionsArray1
+                    };
                 };
             // Series of increment actions "IncrementS2-1" - "IncrementS2-10"
             for (let i = 1; i < numTestActions/2; i++) {
-                handlers["IncrementS2-" + i] =
-                    model => {
-                        model.count++;
-                        return action("IncrementS2-" + (i+1));
+                actions["IncrementS2-" + i] =
+                    (_, state) => {
+                        state.count++;
+                        return {
+                            state,
+                            next: action("IncrementS2-" + (i+1))
+                        };
                     };
             }
-            handlers["IncrementS2-" + numTestActions/2] =
-                model => {
-                    model.count++;
+            actions["IncrementS2-" + numTestActions/2] =
+                (_, state) => {
+                    state.count++;
+                    return { state };
                 };
 
             // "IncrementA2-Init" returns `actionsArray2` array
             for (let i = 1; i <= numTestActions; i++) {
-                handlers["IncrementA2-" + i] =
-                    model => {
-                        model.count++;
+                actions["IncrementA2-" + i] =
+                    (_, state) => {
+                        state.count++;
                         // Half return chain "IncrementS1-1" - "IncrementS1-20",
                         // where "IncrementS1-20" returns `actionsArray1`
                         if (i % 2) {
-                            return action("IncrementS1-1");
+                            return { state, next: action("IncrementS1-1") };
                         }
                         // Half return chain "IncrementS2-1" - "IncrementS2-10"
                         else {
-                            return action("IncrementS2-1");
+                            return { state, next: action("IncrementS2-1") };
                         }
                     };
                 actionsArray2.push(action("IncrementA2-" + i));
             }
-            handlers["IncrementA2-Init"] =
-                model => actionsArray2;
+            actions["IncrementA2-Init"] =
+                (_, state) => ({ state, next: actionsArray2 });
 
             return {
-                initialModel,
-                initialAction: initialAction ? a(initialAction) : undefined,
-                update: handlers,
+                state: () => ({ count: 0 }),
+                init: initialAction ? a(initialAction) : undefined,
+                actions,
                 view
             };
         });
