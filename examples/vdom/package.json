@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "Jetix VDOM example",
   "main": "src/ts/app.js",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json"
+  },
   "author": "Rob Crawford",
   "repository": {
     "type": "git",
@@ -19,6 +21,7 @@
     "typescript": "^3.4.5"
   },
   "dependencies": {
+    "hyperscript-helpers": "^3.0.3",
     "navigo": "^7.1.2",
     "snabbdom": "^0.7.3"
   }

@@ -1,7 +1,7 @@
 import { log } from "./jetixDev"; // @devBuild
 
 // TODO: connect these up during mount
-import { patch, setHook } from "./examples/vdom/src/ts/lib/vdom";
+import { patch, setHook } from "./examples/vdom/ts/lib/vdom";
 
 export type UpdateThunk = (data?: {}) => void | UpdateThunk; // Argument when currying
 
@@ -36,9 +36,9 @@ type Vnode = {
 }
 
 export type Config<S = {}, P = {}, A extends string = "", T extends string = ""> = {
-    state: (props: P) => S;
+    state?: (props: P) => S;
     init?: Next;
-    actions: Record<A, ActionHandler<S, P>>;
+    actions?: Record<A, ActionHandler<S, P>>;
     tasks?: Record<T, TaskHandler>;
     view: (id: string, state: S, props: any, rootState: any) => Vnode;
 };
@@ -58,7 +58,7 @@ export function component<S = {}, P = {}, A extends string = "", T extends strin
 ) {
     // Pass in callback that returns component config
     // Returns render function that is called by parent e.g. `counter("counter-0", { start: 0 })`
-    const renderFn = (idStr: string, props: P): Vnode => {
+    const renderFn = (idStr: string, props?: P): Vnode => {
         const id = idStr.replace(/^#/, "");
         if (!id.length) {
             throw Error("Component requires an id");

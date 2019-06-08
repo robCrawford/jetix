@@ -1,8 +1,7 @@
 
 
-// import { patch, setHook } from "./vdom";
-const patch = (...a) => a;
-const setHook = (...a) => a;
+// TODO: connect these up during mount
+import { patch, setHook } from "./examples/vdom/src/ts/lib/vdom";
 
 export type UpdateThunk = (data?: {}) => void | UpdateThunk; // Argument when currying
 
@@ -27,7 +26,14 @@ type ActionHandler<S, P> = (
 
 type TaskHandler = (data: any) => TaskSpec;
 
-type Vnode = {};
+type Vnode = {
+    sel: string | undefined;
+    data: any;
+    children: (Vnode | string)[] | undefined;
+    elm: Node | undefined;
+    text: string | undefined;
+    key: any;
+}
 
 export type Config<S = {}, P = {}, A extends string = "", T extends string = ""> = {
     state: (props: P) => S;
@@ -37,6 +43,9 @@ export type Config<S = {}, P = {}, A extends string = "", T extends string = "">
     view: (id: string, state: S, props: any, rootState: any) => Vnode;
 };
 
+export type GetConfig<S, P, A extends string, T extends string> =
+    (action: Action<A>, task: Task<T>) => Config<S, P, A, T>;
+
 const appId = "app";
 const renderRefs: { [a: string]: Function } = {};
 const internalKey = { k: Math.random() };
@@ -44,7 +53,9 @@ let rootState;
 
 export let rootAction: Action<any> | undefined;
 
-export function component<S = {}, P = {}, A extends string = "", T extends string = "">(getConfig): Function {
+export function component<S = {}, P = {}, A extends string = "", T extends string = "">(
+    getConfig: GetConfig<S, P, A, T>
+) {
     // Pass in callback that returns component config
     // Returns render function that is called by parent e.g. `counter("counter-0", { start: 0 })`
     const renderFn = (idStr: string, props: P): Vnode => {
@@ -59,10 +70,10 @@ export function component<S = {}, P = {}, A extends string = "", T extends strin
     return renderFn;
 }
 
-export function renderComponent<S = {}, P = {}, A extends string = "", T extends string = "">(
+export function renderComponent<S, P, A extends string = "", T extends string = "">(
     id: string,
     props: P,
-    getConfig: (action: Action<A>, task: Task<T>) => Config<S, P, A, T>
+    getConfig: GetConfig<S, P, A, T>
 ): Vnode {
 
     const isRoot = id === appId;
@@ -158,7 +169,7 @@ export function renderComponent<S = {}, P = {}, A extends string = "", T extends
 
     function render(props: P): Vnode | void {
         if (!noRender) {
-            patch(componentRoot, (componentRoot = config.view(id, state, props, rootState)));
+            patch(componentRoot as Vnode, (componentRoot = config.view(id, state, props, rootState)));
             setRenderRef(componentRoot, id, render);
 
             publish("patch");
