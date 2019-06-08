@@ -5,7 +5,7 @@
         "target": "ES5",
         "module": "AMD",
         "moduleResolution": "node",
-        "outFile": "./dist/app"
+        "outFile": "./dist/app.js"
     },
     "include": [
         "./ts/app.ts"

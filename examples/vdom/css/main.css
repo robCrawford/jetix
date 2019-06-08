@@ -11,23 +11,23 @@ html, body {
     padding: 10px 15px;
     margin: 0;
     font: 12px sans-serif;
-
-    a {
+}
+.page a {
         color: #69f;
     }
 
-    &.default {
+.page.default {
         background:#FFF;
     }
-    &.dark {
+.page.dark {
         background: #444;
     }
 
-    .theme-menu {
+.page .theme-menu {
         margin: 22px -3px;
     }
 
-    .intro {
+.page .intro {
         margin: 20px 0;
         font-size: 14px;
         i {
@@ -35,10 +35,10 @@ html, body {
             line-height: 24px;
         }
     }
-    &.dark .intro{
+.page.dark .intro {
         color: #fff;
     }
-    .counter {
+.page .counter {
         display: inline-block;
         vertical-align: top;
         text-align: center;
@@ -55,10 +55,10 @@ html, body {
             width: 100px;
         }
     }
-    &.dark .counter {
+.page.dark .counter {
         background: #0b3257;
     }
-    .notification {
+.page .notification {
         display: none;
         background: #EEE;
         color: #444;
@@ -78,7 +78,7 @@ html, body {
             margin: 3px auto 5px;
         }
     }
-    &.dark .notification {
+.page.dark .notification {
         button {
             background: #444;
             border-color: #444;
