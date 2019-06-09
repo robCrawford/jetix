@@ -1,4 +1,4 @@
-import { Action, Task, component } from "jetix";
+import { Action, Task, component } from "../lib/jetix";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
 import { html } from "../lib/vdom";

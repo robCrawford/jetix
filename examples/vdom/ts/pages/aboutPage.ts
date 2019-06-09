@@ -1,4 +1,4 @@
-import { component } from "jetix";
+import { component } from "../lib/jetix";
 import { html } from "../lib/vdom";
 import themeMenu from "../components/themeMenu";
 const { div, h1, a } = html;

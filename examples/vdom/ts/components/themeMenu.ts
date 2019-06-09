@@ -1,4 +1,4 @@
-import { component, rootAction } from "jetix";
+import { component, rootAction } from "../lib/jetix";
 import { html } from "../lib/vdom";
 const { div, button } = html;
 

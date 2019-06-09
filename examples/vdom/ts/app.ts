@@ -1,4 +1,4 @@
-import { Action, component } from "jetix";
+import { Action, component } from "./lib/jetix";
 import { html } from "./lib/vdom";
 import counterDemo from "./pages/counterDemo";
 import aboutPage from "./pages/aboutPage";

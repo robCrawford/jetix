@@ -2,7 +2,7 @@
   `https://github.com/krasimir/navigo`
 */
 import Navigo from "navigo";
-import { mount, subscribe } from "jetix";
+import { mount, subscribe } from "./lib/jetix";
 import app from "./app";
 
 const router = new Navigo();

@@ -1,16 +1,18 @@
 {
     "compilerOptions": {
-        "baseUrl": "../../",
         "lib": ["dom", "es2017"],
-        "target": "ES5",
-        "module": "AMD",
+        "target": "es5",
+        "module": "commonjs",
         "moduleResolution": "node",
-        "outFile": "./dist/app.js"
+        "declaration": true,
+        "outDir": "./dist/"
     },
     "include": [
-        "./ts/app.ts"
+        "./ts/**/*"
     ],
     "exclude": [
-        "test/**/*.ts"
+        ".git",
+        "node_modules",
+        "test"
     ]
 }

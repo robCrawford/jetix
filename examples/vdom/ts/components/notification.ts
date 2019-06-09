@@ -1,4 +1,4 @@
-import { Action, UpdateThunk, component } from "jetix";
+import { Action, UpdateThunk, component } from "../lib/jetix";
 import { html } from "../lib/vdom";
 const { div, button } = html;
 

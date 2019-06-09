@@ -1,7 +1,7 @@
 import { log } from "./jetixDev"; // @devBuild
 
 // TODO: connect these up during mount
-import { patch, setHook } from "./examples/vdom/ts/lib/vdom";
+import { patch, setHook } from "./vdom";
 
 export type UpdateThunk = (data?: {}) => void | UpdateThunk; // Argument when currying
 

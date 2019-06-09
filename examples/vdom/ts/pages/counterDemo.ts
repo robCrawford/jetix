@@ -1,4 +1,4 @@
-import { component } from "jetix";
+import { component } from "../lib/jetix";
 import counter from "../components/counter";
 import themeMenu from "../components/themeMenu";
 import { html } from "../lib/vdom";

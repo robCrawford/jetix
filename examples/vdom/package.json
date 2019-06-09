@@ -4,7 +4,9 @@
   "description": "Jetix VDOM example",
   "main": "src/ts/app.js",
   "scripts": {
-    "build": "tsc -p ./tsconfig.json"
+    "start": "parcel serve ./index.html",
+    "build": "cross-env NODE_ENV=production parcel build ./index.html --public-url .",
+    "watch": "parcel watch ./index.html"
   },
   "author": "Rob Crawford",
   "repository": {
@@ -16,7 +18,9 @@
     "@types/jasmine": "^3.3.12",
     "@typescript-eslint/eslint-plugin": "^1.7.0",
     "@typescript-eslint/parser": "^1.7.0",
+    "cross-env": "^5.2.0",
     "eslint": "^5.16.0",
+    "parcel-bundler": "^1.12.3",
     "replace-in-file": "^4.0.0",
     "typescript": "^3.4.5"
   },
