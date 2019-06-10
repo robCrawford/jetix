@@ -26,7 +26,7 @@ type ActionHandler<S, P> = (
 
 type TaskHandler = (data: any) => TaskSpec;
 
-type Vnode = {
+export type Vnode = {
     sel: string | undefined;
     data: any;
     children: (Vnode | string)[] | undefined;
