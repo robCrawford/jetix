@@ -7,24 +7,28 @@ export type UpdateThunk = (data?: {}) => void | UpdateThunk; // Argument when cu
 
 export type Action<A> = (actionName: A, data?: {}) => UpdateThunk;
 
-export type Task<T> = (taskName: T, data: Record<string, any>) => Promise<any>;
+export type Task<T> = (taskName: T, data?: InputData) => Promise<any>;
 
 type TaskSpec = {
-    perform: () => Promise<any>;
-    success: (a: any) => UpdateThunk;
-    failure: (a: any) => UpdateThunk | void;
+    perform: () => Promise<ResultData>;
+    success: (a: ResultData) => UpdateThunk;
+    failure: (a: ResultData) => UpdateThunk | void;
 };
 
 type Next = UpdateThunk | Promise<any> | (UpdateThunk | Promise<any>)[];
 
 type ActionHandler<S, P> = (
-    data: any,
+    data: InputData,
     state: S,
     props: P,
     rootState: any
 ) => { state: S; next?: Next };
 
-type TaskHandler = (data: any) => TaskSpec;
+type TaskHandler = (data: InputData) => TaskSpec;
+
+type InputData = {};
+
+type ResultData = any;
 
 export type Vnode = {
     sel: string | undefined;

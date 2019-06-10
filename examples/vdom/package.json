@@ -4,9 +4,8 @@
   "description": "Jetix VDOM example",
   "main": "src/ts/app.js",
   "scripts": {
-    "start": "parcel serve ./index.html",
-    "build": "cross-env NODE_ENV=production parcel build ./index.html --public-url .",
-    "watch": "parcel watch ./index.html"
+    "dev": "parcel serve ./index.html",
+    "build": "cross-env NODE_ENV=production parcel build ./index.html --public-url ."
   },
   "author": "Rob Crawford",
   "repository": {
