@@ -1,50 +1,41 @@
 import { log } from "./jetixDev"; // @devBuild
 
 // TODO: connect these up during mount
-import { patch, setHook } from "./vdom";
+import { patch, setHook, VNode } from "./vdom";
 
-export type UpdateThunk = (data?: {}) => void | UpdateThunk; // Argument when currying
+export type ActionThunk = (data?: {}) => void | ActionThunk; // Argument only used when currying
 
-export type Action<A> = (actionName: A, data?: {}) => UpdateThunk;
+export type Action<A> = (actionName: A, data?: {}) => ActionThunk;
 
-export type Task<T> = (taskName: T, data?: InputData) => Promise<any>;
+export type Task<T> = (taskName: T, data?: {}) => Promise<ActionThunk>;
 
-type TaskSpec = {
-    perform: () => Promise<ResultData>;
-    success: (a: ResultData) => UpdateThunk;
-    failure: (a: ResultData) => UpdateThunk | void;
-};
-
-type Next = UpdateThunk | Promise<any> | (UpdateThunk | Promise<any>)[];
+type Next = ActionThunk | Promise<ActionThunk> | (ActionThunk | Promise<ActionThunk>)[];
 
 type ActionHandler<S, P> = (
-    data: InputData,
+    data: {},
     state: S,
     props: P,
-    rootState: any
+    rootState: {}
 ) => { state: S; next?: Next };
 
-type TaskHandler = (data: InputData) => TaskSpec;
+type TaskHandler = (data: {}) => TaskSpec;
 
-type InputData = {};
+type TaskResult = any; // Result from the effect promise
 
-type ResultData = any;
+type TaskSpec = {
+    perform: () => Promise<TaskResult>;
+    success: (a: TaskResult) => ActionThunk;
+    failure: (a: TaskResult) => ActionThunk;
+};
 
-export type Vnode = {
-    sel: string | undefined;
-    data: any;
-    children: (Vnode | string)[] | undefined;
-    elm: Node | undefined;
-    text: string | undefined;
-    key: any;
-}
+type WithTaskName<T> = T & { taskName: string };
 
 export type Config<S = {}, P = {}, A extends string = "", T extends string = ""> = {
     state?: (props: P) => S;
     init?: Next;
     actions?: Record<A, ActionHandler<S, P>>;
     tasks?: Record<T, TaskHandler>;
-    view: (id: string, state: S, props: any, rootState: any) => Vnode;
+    view: (id: string, state: S, props: {}, rootState: {}) => VNode;
 };
 
 export type GetConfig<S, P, A extends string, T extends string> =
@@ -55,14 +46,14 @@ const renderRefs: { [a: string]: Function } = {};
 const internalKey = { k: Math.random() };
 let rootState;
 
-export let rootAction: Action<any> | undefined;
+export let rootAction: Action<string> | undefined;
 
 export function component<S = {}, P = {}, A extends string = "", T extends string = "">(
     getConfig: GetConfig<S, P, A, T>
 ) {
     // Pass in callback that returns component config
     // Returns render function that is called by parent e.g. `counter("counter-0", { start: 0 })`
-    const renderFn = (idStr: string, props?: P): Vnode => {
+    const renderFn = (idStr: string, props?: P): VNode => {
         const id = idStr.replace(/^#/, "");
         if (!id.length) {
             throw Error("Component requires an id");
@@ -78,7 +69,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
     id: string,
     props: P,
     getConfig: GetConfig<S, P, A, T>
-): Vnode {
+): VNode {
     deepFreeze(props); // @devBuild
     const isRoot = id === appId;
 
@@ -88,7 +79,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
         return componentRoot;
     }
 
-    const action: Action<A> = (actionName, data): UpdateThunk => {
+    const action: Action<A> = (actionName, data): ActionThunk => {
         return (thunkInput?: {}): void => {
             if (thunkInput && "srcElement" in thunkInput) {
                 // Invoked from the DOM, `thunkInput` is the (unused) event
@@ -116,7 +107,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
         }
         const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
         const promise = perform();
-        (promise.then as any).taskName = taskName;
+        (promise.then as WithTaskName<typeof promise.then>).taskName = taskName;
         return promise.then(success).catch(failure);
     };
 
@@ -143,7 +134,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
         run(next, props, actionName);
     }
 
-    function run(next: Next | undefined, props: P, prevTag?: any): void {
+    function run(next: Next | undefined, props: P, prevTag?: string): void {
         if (!next) {
             render(props);
         }
@@ -159,7 +150,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
             render(props);
         }
         else if (typeof next.then === "function") {
-            const taskName = (next.then as any).taskName || "unknown";
+            const taskName = (next.then as WithTaskName<typeof next.then>).taskName || "unknown";
             next
                 .then(n => {
                     log.taskSuccess(id, taskName); // @devBuild
@@ -171,9 +162,9 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
         }
     }
 
-    function render(props: P): Vnode | void {
+    function render(props: P): VNode | void {
         if (!noRender) {
-            patch(componentRoot as Vnode, (componentRoot = config.view(id, state, props, rootState)));
+            patch(componentRoot as VNode, (componentRoot = config.view(id, state, props, rootState)));
             setRenderRef(componentRoot, id, render);
             log.render(id, props); // @devBuild
             publish("patch");
@@ -201,7 +192,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
     return componentRoot;
 }
 
-export function mount(appComponent: (string, any) => Vnode, initFn?: Function): void {
+export function mount(appComponent: (string, {}) => VNode, initFn?: Function): void {
     // Mount the top-level app component
     patch(
         document.getElementById(appId),
@@ -218,14 +209,14 @@ export function mount(appComponent: (string, any) => Vnode, initFn?: Function): 
     }
 }
 
-function renderById(id: string, props: {}): Vnode | void {
+function renderById(id: string, props: {}): VNode | void {
     const render = renderRefs[id];
     if (render) {
         return render(props);
     }
 }
 
-function setRenderRef(vnode: Vnode, id: string, render: Function): void {
+function setRenderRef(vnode: VNode, id: string, render: Function): void {
     // Run after all synchronous patches
     setTimeout(() => {
         renderRefs[id] = render;
@@ -258,12 +249,12 @@ function deepFreeze<A>(o: A): A { // @devBuild
 } // @devBuild
 
 // Pub/sub
-export function subscribe(type: any, listener: EventListener) {
+export function subscribe(type: string, listener: EventListener) {
     document.addEventListener(type, listener);
 }
-export function unsubscribe(type: any, listener: EventListener) {
+export function unsubscribe(type: string, listener: EventListener) {
     document.removeEventListener(type, listener);
 }
-export function publish(type: any, detail?: any) {
+export function publish(type: string, detail?: any) {
     document.dispatchEvent(new CustomEvent(type, detail ? { detail } : null));
 }

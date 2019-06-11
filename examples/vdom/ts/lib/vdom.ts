@@ -8,6 +8,7 @@ import sAttr from "snabbdom/modules/attributes";
 import sProps from "snabbdom/modules/props";
 import sEvents from "snabbdom/modules/eventlisteners";
 import hyperscriptHelpers from 'hyperscript-helpers';
+export { VNode } from "snabbdom/vnode";
 
 export const patch = init([ sClass, sAttr, sProps, sEvents ]);
 export const html = hyperscriptHelpers(h);

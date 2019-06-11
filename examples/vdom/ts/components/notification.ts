@@ -1,10 +1,10 @@
-import { Action, UpdateThunk, component } from "../lib/jetix";
+import { Action, ActionThunk, component } from "../lib/jetix";
 import { html } from "../lib/vdom";
 const { div, button } = html;
 
 type Props = {
     readonly text: string;
-    readonly onDismiss: UpdateThunk;
+    readonly onDismiss: ActionThunk;
 };
 
 type State = {
