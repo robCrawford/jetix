@@ -12,14 +12,14 @@ export type State = {
     page?: Page;
 };
 
-type ActionName = "SetPage" | "SetTheme";
+export type RootActionName = "SetPage" | "SetTheme";
 
 type Page = "counterDemo" | "aboutPage";
 
 type Theme = "default" | "dark";
 
 
-export default component<State, Props, ActionName>((action: Action<ActionName>) => ({
+export default component<State, Props, RootActionName>((action: Action<RootActionName>) => ({
 
     state: () => ({
         theme: "default",

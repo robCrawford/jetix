@@ -7,6 +7,8 @@ export type ActionThunk = (data?: {}) => void | ActionThunk; // Argument only us
 
 export type Action<A> = (actionName: A, data?: {}) => ActionThunk;
 
+export type RunAction<A> = (actionName: A, data?: {}) => void;
+
 export type Task<T> = (taskName: T, data?: {}) => Promise<ActionThunk>;
 
 type Next = ActionThunk | Promise<ActionThunk> | (ActionThunk | Promise<ActionThunk>)[];
@@ -192,20 +194,23 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
     return componentRoot;
 }
 
-export function mount(appComponent: (string, {}) => VNode, initFn?: Function): void {
+export function mount({ app, props, init }: {
+    app: (idStr: string, props?: {}) => VNode;
+    props: {};
+    init?: (runRootAction: RunAction<string>) => void;
+}): void {
     // Mount the top-level app component
     patch(
         document.getElementById(appId),
-        appComponent(appId, {
-            /* Props */
-        })
+        app(appId, props)
     );
-    // An optional callback can be provided to run root actions at startup with `internalKey`
-    if (initFn) {
-        const runRootAction = (actionName, data) => {
+    // Manually invoking an action without `internalKey` is an error, so `runRootAction`
+    // is provided by `mount` for wiring up events to root actions (e.g. routing)
+    if (init) {
+        const runRootAction: RunAction<string> = (actionName, data) => {
             rootAction(actionName, data)(internalKey);
         };
-        initFn(runRootAction);
+        init(runRootAction);
     }
 }
 
