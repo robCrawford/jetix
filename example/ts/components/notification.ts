@@ -1,5 +1,5 @@
-import { Action, ActionThunk, component } from "../lib/jetix";
-import { html } from "../lib/vdom";
+import { Action, ActionThunk, component } from "../../../src/jetix";
+import { html } from "../../../src/vdom";
 const { div, button } = html;
 
 type Props = {

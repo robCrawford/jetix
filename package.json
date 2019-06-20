@@ -20,5 +20,8 @@
     "replace-in-file": "^4.0.0",
     "typescript": "^3.4.5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "hyperscript-helpers": "^3.0.3",
+    "snabbdom": "^0.7.3"
+  }
 }

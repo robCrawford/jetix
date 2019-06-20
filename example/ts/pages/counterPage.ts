@@ -1,7 +1,7 @@
-import { component } from "../lib/jetix";
+import { component } from "../../../src/jetix";
+import { html } from "../../../src/vdom";
 import counter from "../components/counter";
 import themeMenu from "../components/themeMenu";
-import { html } from "../lib/vdom";
 const { div, h1, i, a } = html;
 
 
@@ -12,7 +12,7 @@ export default component(() => ({
             div(".intro", [
                 themeMenu("#theme-menu"),
                 a({attrs: {href: "/about" + location.search, "data-navigo": true}}, "About page"),
-                h1("Counter demo"),
+                h1("Counter"),
                 div("Please open the developer console, where all component actions, state and renders are logged (when `debug` is in the query string)."),
                 i("Note that `render()` doesn't update the DOM unless the VDOM has changed.")
             ]),

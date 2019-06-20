@@ -1,7 +1,7 @@
-import { Action, Task, component } from "../lib/jetix";
+import { Action, Task, component } from "../../../src/jetix";
+import { html } from "../../../src/vdom";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
-import { html } from "../lib/vdom";
 const { div, button } = html;
 
 type Props = {

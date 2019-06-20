@@ -1,6 +1,6 @@
-import { Action, component } from "./lib/jetix";
-import { html } from "./lib/vdom";
-import counterDemo from "./pages/counterDemo";
+import { Action, component } from "../../src/jetix";
+import { html } from "../../src/vdom";
+import counterPage from "./pages/counterPage";
 import aboutPage from "./pages/aboutPage";
 import "./router";
 const { div } = html;
@@ -14,9 +14,9 @@ export type State = {
 
 export type RootActionName = "SetPage" | "SetTheme";
 
-type Page = "counterDemo" | "aboutPage";
+export type Page = "counterPage" | "aboutPage";
 
-type Theme = "default" | "dark";
+export type Theme = "default" | "dark";
 
 
 export default component<State, Props, RootActionName>((action: Action<RootActionName>) => ({
@@ -48,9 +48,9 @@ export default component<State, Props, RootActionName>((action: Action<RootActio
                             { onSetTheme: action("SetTheme") }
                         );
 
-                    case "counterDemo":
-                        return counterDemo(
-                            "#counter-demo",
+                    case "counterPage":
+                        return counterPage(
+                            "#counter-page",
                             { onSetTheme: action("SetTheme") }
                         );
                 }

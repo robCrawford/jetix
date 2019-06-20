@@ -1,5 +1,5 @@
+import { mount, subscribe, RunAction } from "../../src/jetix";
 import Navigo from "navigo";
-import { mount, subscribe, RunAction } from "./lib/jetix";
 import app, { RootActionName } from "./app";
 
 const router = new Navigo();
@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => mount({
         router
             .on({
                 "about": () => runRootAction("SetPage", { page: "aboutPage" }),
-                "*": () => runRootAction("SetPage", { page: "counterDemo" })
+                "*": () => runRootAction("SetPage", { page: "counterPage" })
             })
             .resolve();
 
