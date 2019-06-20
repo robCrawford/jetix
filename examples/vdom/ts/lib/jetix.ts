@@ -1,7 +1,8 @@
-import { log } from "./jetixDev"; // @devBuild
-
-// TODO: connect these up during mount
+/*
+  Lines marked `@devBuild` should be removed for production
+*/
 import { patch, setHook, VNode } from "./vdom";
+import { log } from "./jetixDev"; // @devBuild
 
 export type ActionThunk = (data?: {}) => void | ActionThunk; // Argument only used when currying
 
@@ -43,8 +44,10 @@ export type Config<S = {}, P = {}, A extends string = "", T extends string = "">
 export type GetConfig<S, P, A extends string, T extends string> =
     (action: Action<A>, task: Task<T>) => Config<S, P, A, T>;
 
+type RenderFn<T> = (props: T) => VNode | void;
+
 const appId = "app";
-const renderRefs: { [a: string]: Function } = {};
+const renderRefs: { [a: string]: RenderFn<{}> } = {};
 const internalKey = { k: Math.random() };
 let rootState;
 
@@ -164,7 +167,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
         }
     }
 
-    function render(props: P): VNode | void {
+    const render: RenderFn<P> = (props: P) => {
         if (!noRender) {
             patch(componentRoot as VNode, (componentRoot = config.view(id, state, props, rootState)));
             setRenderRef(componentRoot, id, render);
@@ -221,7 +224,7 @@ function renderById(id: string, props: {}): VNode | void {
     }
 }
 
-function setRenderRef(vnode: VNode, id: string, render: Function): void {
+function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
     // Run after all synchronous patches
     setTimeout(() => {
         renderRefs[id] = render;
