@@ -20,11 +20,12 @@ type Actions = {
     "SetFeedback": { text: string };
 };
 
-type TaskName =
-    "ValidateCount"
+type Tasks = {
+    "ValidateCount": { count: number };
+}
 
 
-export default component<State, Props, Actions, TaskName>((action: Action<Actions>, task: Task<TaskName>) => ({
+export default component<State, Props, Actions, Tasks>((action: Action<Actions>, task: Task<Tasks>) => ({
 
     // Initial state
     state: (props: Props) => ({

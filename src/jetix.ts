@@ -12,7 +12,7 @@ export type Action<A> = (actionName: keyof A, data?: ValueOf<A>) => ActionThunk;
 
 export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
-export type Task<T> = (taskName: T, data?: {}) => Promise<ActionThunk>;
+export type Task<T> = (taskName: keyof T, data?: ValueOf<T>) => Promise<ActionThunk>;
 
 type Next = ActionThunk | Promise<ActionThunk> | (ActionThunk | Promise<ActionThunk>)[];
 
@@ -33,17 +33,17 @@ type TaskSpec = {
     failure: (a: TaskResult) => ActionThunk;
 };
 
-type WithTaskName<T> = T & { taskName: string };
+type WithTaskName<F, T> = F & { taskName: keyof T };
 
-export type Config<S = {}, P = {}, A = {}, T extends string = ""> = {
+export type Config<S = {}, P = {}, A = {}, T = {}> = {
     state?: (props: P) => S;
     init?: Next;
     actions?: Record<keyof A, ActionHandler<S, P, ValueOf<A>>>;
-    tasks?: Record<T, TaskHandler>;
+    tasks?: Record<keyof T, TaskHandler>;
     view: (id: string, state: S, props: {}, rootState: {}) => VNode;
 };
 
-export type GetConfig<S, P, A, T extends string> =
+export type GetConfig<S, P, A, T> =
     (action: Action<A>, task: Task<T>) => Config<S, P, A, T>;
 
 type RenderFn<T> = (props: T) => VNode | void;
@@ -54,7 +54,7 @@ const internalKey = {}; // Private unique value
 let rootState;
 export let rootAction;
 
-export function component<S = {}, P = {}, A = {}, T extends string = "">(
+export function component<S = {}, P = {}, A = {}, T = {}>(
     getConfig: GetConfig<S, P, A, T>
 ) {
     // Pass in callback that returns component config
@@ -71,7 +71,7 @@ export function component<S = {}, P = {}, A = {}, T extends string = "">(
     return renderFn;
 }
 
-export function renderComponent<S, P, A = {}, T extends string = "">(
+export function renderComponent<S, P, A = {}, T = {}>(
     id: string,
     props: P,
     getConfig: GetConfig<S, P, A, T>
@@ -113,7 +113,7 @@ export function renderComponent<S, P, A = {}, T extends string = "">(
         }
         const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
         const promise = perform();
-        (promise.then as WithTaskName<typeof promise.then>).taskName = taskName;
+        (promise.then as WithTaskName<typeof promise.then, T>).taskName = taskName;
         return promise.then(success).catch(failure);
     };
 
@@ -159,14 +159,14 @@ export function renderComponent<S, P, A = {}, T extends string = "">(
             render(props);
         }
         else if (typeof next.then === "function") {
-            const taskName = (next.then as WithTaskName<typeof next.then>).taskName || "unknown";
+            const taskName = (next.then as WithTaskName<typeof next.then, T>).taskName || "unknown";
             next
                 .then(n => {
-                    log.taskSuccess(id, taskName); // @devBuild
+                    log.taskSuccess(id, String(taskName)); // @devBuild
                     run(n, props, prevTag);
                 })
-                .catch(e => log.taskFailure(id, taskName, e)); // @devBuild
-            log.taskPerform(taskName); // @devBuild
+                .catch(e => log.taskFailure(id, String(taskName), e)); // @devBuild
+            log.taskPerform(String(taskName)); // @devBuild
             render(props); // End of sync chain
         }
     }
