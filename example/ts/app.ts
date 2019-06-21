@@ -1,4 +1,4 @@
-import { Action, component } from "../../src/jetix";
+import { component } from "../../src/jetix";
 import { html } from "../../src/vdom";
 import counterPage from "./pages/counterPage";
 import aboutPage from "./pages/aboutPage";
@@ -22,7 +22,7 @@ export type Page = "counterPage" | "aboutPage";
 export type Theme = "default" | "dark";
 
 
-export default component<State, Props, RootActions>((action: Action<RootActions>) => ({
+export default component<State, Props, RootActions>(action => ({
 
     state: () => ({
         theme: "default",

@@ -1,4 +1,4 @@
-import { Action, Task, component } from "../../../src/jetix";
+import { component } from "../../../src/jetix";
 import { html } from "../../../src/vdom";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
@@ -25,7 +25,7 @@ type Tasks = {
 }
 
 
-export default component<State, Props, Actions, Tasks>((action: Action<Actions>, task: Task<Tasks>) => ({
+export default component<State, Props, Actions, Tasks>((action, task) => ({
 
     // Initial state
     state: (props: Props) => ({

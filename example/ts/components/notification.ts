@@ -1,4 +1,4 @@
-import { Action, ActionThunk, component } from "../../../src/jetix";
+import { ActionThunk, component } from "../../../src/jetix";
 import { html } from "../../../src/vdom";
 const { div, button } = html;
 
@@ -16,7 +16,7 @@ type Actions = {
 }
 
 
-export default component<State, Props, Actions>((action: Action<Actions>) => ({
+export default component<State, Props, Actions>(action => ({
 
     state: () => ({
         show: true

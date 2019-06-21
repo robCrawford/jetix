@@ -133,14 +133,12 @@ export function renderComponent<S, P, A = {}, T = {}>(
         if (isRoot) {
             rootState = newState;
         }
-        const actionHandler = config && config.actions[actionName];
-        if (actionHandler) {
-            ({ state, next } = (actionHandler as ActionHandler<S, P, ValueOf<A>>)(data, newState, props, rootState));
-            // Freeze in dev to error on any mutation outside of action handlers
-            deepFreeze(state); // @devBuild
-            log.updateEnd(state); // @devBuild
-            run(next, props, String(actionName));
-        }
+        const actionHandler = config.actions[actionName];
+        ({ state, next } = (actionHandler as ActionHandler<S, P, ValueOf<A>>)(data, newState, props, rootState));
+        // Freeze in dev to error on any mutation outside of action handlers
+        deepFreeze(state); // @devBuild
+        log.updateEnd(state); // @devBuild
+        run(next, props, String(actionName));
     }
 
     function run(next: Next | undefined, props: P, prevTag?: string): void {
