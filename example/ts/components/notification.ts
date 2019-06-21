@@ -11,11 +11,12 @@ type State = {
     show: boolean;
 };
 
-type ActionName =
-    "Dismiss";
+type Actions = {
+    "Dismiss": null;
+}
 
 
-export default component<State, Props, ActionName>((action: Action<ActionName>) => ({
+export default component<State, Props, Actions>((action: Action<Actions>) => ({
 
     state: () => ({
         show: true

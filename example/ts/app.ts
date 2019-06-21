@@ -12,14 +12,17 @@ export type State = {
     page?: Page;
 };
 
-export type RootActionName = "SetPage" | "SetTheme";
+export type RootActions = {
+    "SetPage": { page: Page };
+    "SetTheme": { theme: Theme };
+};
 
 export type Page = "counterPage" | "aboutPage";
 
 export type Theme = "default" | "dark";
 
 
-export default component<State, Props, RootActionName>((action: Action<RootActionName>) => ({
+export default component<State, Props, RootActions>((action: Action<RootActions>) => ({
 
     state: () => ({
         theme: "default",

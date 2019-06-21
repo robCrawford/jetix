@@ -13,17 +13,18 @@ type State = {
     feedback: string;
 };
 
-type ActionName =
-    "Increment" |
-    "Decrement" |
-    "Validate" |
-    "SetFeedback";
+type Actions = {
+    "Increment": { step: number };
+    "Decrement": { step: number };
+    "Validate": null;
+    "SetFeedback": { text: string };
+};
 
 type TaskName =
     "ValidateCount"
 
 
-export default component<State, Props, ActionName, TaskName>((action: Action<ActionName>, task: Task<TaskName>) => ({
+export default component<State, Props, Actions, TaskName>((action: Action<Actions>, task: Task<TaskName>) => ({
 
     // Initial state
     state: (props: Props) => ({

@@ -4,18 +4,20 @@
 import { patch, setHook, VNode } from "./vdom";
 import { log } from "./jetixDev"; // @devBuild
 
+type ValueOf<T> = T[keyof T];
+
 export type ActionThunk = (data?: {}) => void | ActionThunk; // Argument only used when currying
 
-export type Action<A> = (actionName: A, data?: {}) => ActionThunk;
+export type Action<A> = (actionName: keyof A, data?: ValueOf<A>) => ActionThunk;
 
-export type RunAction<A> = (actionName: A, data?: {}) => void;
+export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
 export type Task<T> = (taskName: T, data?: {}) => Promise<ActionThunk>;
 
 type Next = ActionThunk | Promise<ActionThunk> | (ActionThunk | Promise<ActionThunk>)[];
 
-type ActionHandler<S, P> = (
-    data: {},
+export type ActionHandler<S, P, D> = (
+    data: D,
     state: S,
     props: P,
     rootState: {}
@@ -33,27 +35,26 @@ type TaskSpec = {
 
 type WithTaskName<T> = T & { taskName: string };
 
-export type Config<S = {}, P = {}, A extends string = "", T extends string = ""> = {
+export type Config<S = {}, P = {}, A = {}, T extends string = ""> = {
     state?: (props: P) => S;
     init?: Next;
-    actions?: Record<A, ActionHandler<S, P>>;
+    actions?: Record<keyof A, ActionHandler<S, P, ValueOf<A>>>;
     tasks?: Record<T, TaskHandler>;
     view: (id: string, state: S, props: {}, rootState: {}) => VNode;
 };
 
-export type GetConfig<S, P, A extends string, T extends string> =
+export type GetConfig<S, P, A, T extends string> =
     (action: Action<A>, task: Task<T>) => Config<S, P, A, T>;
 
 type RenderFn<T> = (props: T) => VNode | void;
 
 const appId = "app";
 const renderRefs: { [a: string]: RenderFn<{}> } = {};
-const internalKey = { k: Math.random() };
+const internalKey = {}; // Private unique value
 let rootState;
+export let rootAction;
 
-export let rootAction: Action<string> | undefined;
-
-export function component<S = {}, P = {}, A extends string = "", T extends string = "">(
+export function component<S = {}, P = {}, A = {}, T extends string = "">(
     getConfig: GetConfig<S, P, A, T>
 ) {
     // Pass in callback that returns component config
@@ -70,7 +71,7 @@ export function component<S = {}, P = {}, A extends string = "", T extends strin
     return renderFn;
 }
 
-export function renderComponent<S, P, A extends string = "", T extends string = "">(
+export function renderComponent<S, P, A = {}, T extends string = "">(
     id: string,
     props: P,
     getConfig: GetConfig<S, P, A, T>
@@ -85,7 +86,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
     }
 
     const action: Action<A> = (actionName, data): ActionThunk => {
-        return (thunkInput?: {}): void => {
+        return (thunkInput?: ValueOf<A> | {}): void => {
             if (thunkInput && "srcElement" in thunkInput) {
                 // Invoked from the DOM, `thunkInput` is the (unused) event
                 update(actionName, data);
@@ -98,7 +99,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
             else if (thunkInput) {
                 // If a data argument is supplied, return a new thunk instead of invoking the current one
                 // This enables currying e.g. when passing an action from parent to child via props
-                action(actionName, thunkInput);
+                action(actionName, thunkInput as ValueOf<A>);
             }
             else { // @devBuild
                 log.manualActionError(id, String(actionName)); // @devBuild
@@ -121,9 +122,9 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
     let state = config.state && config.state(props);
     let noRender = 0;
 
-    function update(actionName: A, data?: {}): void {
+    function update(actionName: keyof A, data?: ValueOf<A>): void {
         let next;
-        log.updateStart(id, state, actionName, data); // @devBuild
+        log.updateStart(id, state, String(actionName), data); // @devBuild
         const newState =
             clone( // @devBuild
                 state
@@ -132,11 +133,14 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
         if (isRoot) {
             rootState = newState;
         }
-        ({ state, next } = config.actions[actionName](data, newState, props, rootState));
-        // Freeze in dev to error on any mutation outside of action handlers
-        deepFreeze(state); // @devBuild
-        log.updateEnd(state); // @devBuild
-        run(next, props, actionName);
+        const actionHandler = config && config.actions[actionName];
+        if (actionHandler) {
+            ({ state, next } = (actionHandler as ActionHandler<S, P, ValueOf<A>>)(data, newState, props, rootState));
+            // Freeze in dev to error on any mutation outside of action handlers
+            deepFreeze(state); // @devBuild
+            log.updateEnd(state); // @devBuild
+            run(next, props, String(actionName));
+        }
     }
 
     function run(next: Next | undefined, props: P, prevTag?: string): void {
@@ -187,7 +191,7 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
     } // @devBuild
 
     if (isRoot) {
-        rootAction = action;
+        rootAction = action as Action<A>;
         rootState = state;
     }
 
@@ -197,10 +201,10 @@ export function renderComponent<S, P, A extends string = "", T extends string = 
     return componentRoot;
 }
 
-export function mount({ app, props, init }: {
-    app: (idStr: string, props?: {}) => VNode;
-    props: {};
-    init?: (runRootAction: RunAction<string>) => void;
+export function mount<T, P>({ app, props, init }: {
+    app: (idStr: string, props?: P) => VNode;
+    props: P;
+    init?: (runRootAction: RunAction<T>) => void;
 }): void {
     // Mount the top-level app component
     patch(
@@ -210,7 +214,7 @@ export function mount({ app, props, init }: {
     // Manually invoking an action without `internalKey` is an error, so `runRootAction`
     // is provided by `mount` for wiring up events to root actions (e.g. routing)
     if (init) {
-        const runRootAction: RunAction<string> = (actionName, data) => {
+        const runRootAction: RunAction<T> = (actionName, data) => {
             rootAction(actionName, data)(internalKey);
         };
         init(runRootAction);
@@ -234,12 +238,12 @@ function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
     });
 }
 
-function clone<A>(o: A): A { // @devBuild
+function clone<T>(o: T): T { // @devBuild
     // Should only be cloning simple state models
     return o && JSON.parse(JSON.stringify(o)); // @devBuild
 } // @devBuild
 
-function deepFreeze<A>(o: A): A { // @devBuild
+function deepFreeze<T>(o: T): T { // @devBuild
     if (o) { // @devBuild
         Object.freeze(o); // @devBuild
         Object.getOwnPropertyNames(o).forEach((p: string) => { // @devBuild
