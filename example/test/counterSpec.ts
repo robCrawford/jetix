@@ -1,5 +1,5 @@
-import { initComponent } from "jetixTest";
-import counter from "../../ts/components/counter";
+import { initComponent } from "../../src/jetixTest";
+import counter from "../ts/components/counter";
 
 describe("Counter component", function() {
 

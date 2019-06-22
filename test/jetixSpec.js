@@ -1,5 +1,5 @@
-import { renderComponent } from "../../js/lib/jetix";
-import * as vdom from "../../js/lib/vdom";
+import { renderComponent } from "../src/jetix";
+import * as vdom from "../src/vdom";
 
 describe("Jetix", function() {
     let patchCount, state, action;
