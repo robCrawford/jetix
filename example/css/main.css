@@ -74,7 +74,9 @@ html, body {
     padding: 3px 7px 4px;
     margin: 3px auto 5px;
     border-radius: 3px;
+    border: 1px solid #BBB;
     width: 80%;
+    margin-top: 5px;
 }
 .page.dark .notification button {
     background: #444;

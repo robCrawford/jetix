@@ -8,11 +8,11 @@ type ValueOf<T> = T[keyof T];
 
 export type ActionThunk = (data?: {}) => void | ActionThunk; // Argument only used when currying
 
-export type Action<A> = (actionName: keyof A, data?: ValueOf<A>) => ActionThunk;
+export type GetActionThunk<A> = <K extends keyof A>(actionName: K, data?: A[K]) => ActionThunk;
 
 export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
-export type Task<T> = (taskName: keyof T, data?: ValueOf<T>) => Promise<ActionThunk>;
+export type GetTaskThunk<T> = (taskName: keyof T, data?: ValueOf<T>) => Promise<ActionThunk>;
 
 type Next = ActionThunk | Promise<ActionThunk> | (ActionThunk | Promise<ActionThunk>)[];
 
@@ -23,7 +23,7 @@ export type ActionHandler<S, P, D> = (
     rootState: {}
 ) => { state: S; next?: Next };
 
-type TaskHandler = (data: {}) => TaskSpec;
+type TaskHandler<D> = (data: D) => TaskSpec;
 
 type TaskResult = any; // Result from the effect promise
 
@@ -35,16 +35,16 @@ type TaskSpec = {
 
 type WithTaskName<F, T> = F & { taskName: keyof T };
 
-export type Config<S = {}, P = {}, A = {}, T = {}> = {
+export type Config<S, P, A, T> = {
     state?: (props: P) => S;
     init?: Next;
-    actions?: Record<keyof A, ActionHandler<S, P, ValueOf<A>>>;
-    tasks?: Record<keyof T, TaskHandler>;
+    actions?: {[K in keyof A]: ActionHandler<S, P, A[K]>};
+    tasks?: {[K in keyof T]: TaskHandler<T[K]>};
     view: (id: string, state: S, props: {}, rootState: {}) => VNode;
 };
 
 export type GetConfig<S, P, A, T> =
-    (action: Action<A>, task: Task<T>) => Config<S, P, A, T>;
+    (action: GetActionThunk<A>, task: GetTaskThunk<T>) => Config<S, P, A, T>;
 
 type RenderFn<T> = (props: T) => VNode | void;
 
@@ -54,7 +54,7 @@ const internalKey = {}; // Private unique value
 let rootState;
 export let rootAction;
 
-export function component<S = {}, P = {}, A = {}, T = {}>(
+export function component<S, P, A, T>(
     getConfig: GetConfig<S, P, A, T>
 ) {
     // Pass in callback that returns component config
@@ -71,7 +71,7 @@ export function component<S = {}, P = {}, A = {}, T = {}>(
     return renderFn;
 }
 
-export function renderComponent<S, P, A = {}, T = {}>(
+export function renderComponent<S, P, A, T>(
     id: string,
     props: P,
     getConfig: GetConfig<S, P, A, T>
@@ -85,7 +85,7 @@ export function renderComponent<S, P, A = {}, T = {}>(
         return componentRoot;
     }
 
-    const action: Action<A> = (actionName, data): ActionThunk => {
+    const action: GetActionThunk<A> = (actionName, data): ActionThunk => {
         return (thunkInput?: ValueOf<A> | {}): void => {
             if (thunkInput && "srcElement" in thunkInput) {
                 // Invoked from the DOM, `thunkInput` is the (unused) event
@@ -107,7 +107,7 @@ export function renderComponent<S, P, A = {}, T = {}>(
         };
     };
 
-    const task: Task<T> = (taskName, data) => {
+    const task: GetTaskThunk<T> = (taskName, data) => {
         if (!config.tasks) {
             throw Error(`tasks ${String(config.tasks)}`);
         }
@@ -189,7 +189,7 @@ export function renderComponent<S, P, A = {}, T = {}>(
     } // @devBuild
 
     if (isRoot) {
-        rootAction = action as Action<A>;
+        rootAction = action as Function;
         rootState = state;
     }
 

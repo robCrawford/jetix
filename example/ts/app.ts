@@ -30,11 +30,11 @@ export default component<State, Props, RootActions>(action => ({
     }),
 
     actions: {
-        SetPage: ({ page }: { page: Page }, state: State) => {
+        SetPage: ({ page }, state: State) => {
             state.page = page;
             return { state };
         },
-        SetTheme: ({ theme }: { theme: Theme }, state: State) => {
+        SetTheme: ({ theme }, state: State) => {
             state.theme = theme;
             return { state };
         }

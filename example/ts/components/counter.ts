@@ -39,14 +39,14 @@ export default component<State, Props, Actions, Tasks>((action, task) => ({
     // Action handlers return new state, and any next actions/tasks
     actions: {
         // Inputs: action data, state, props, rootState
-        Increment: ({ step }: { step: number }, state: State) => {
+        Increment: ({ step }, state: State) => {
             state.counter += step;
             return {
                 state,
                 next: action("Validate")
             };
         },
-        Decrement: ({ step }: { step: number }, state: State) => {
+        Decrement: ({ step }, state: State) => {
             state.counter -= step;
             return {
                 state,
@@ -62,7 +62,7 @@ export default component<State, Props, Actions, Tasks>((action, task) => ({
                     task("ValidateCount", { count: state.counter })
                 ]};
         },
-        SetFeedback: ({ text }: { text: string }, state: State) => {
+        SetFeedback: ({ text }, state: State) => {
             state.feedback = text;
             return { state };
         }
@@ -70,7 +70,7 @@ export default component<State, Props, Actions, Tasks>((action, task) => ({
 
     // Task handlers provide callbacks for async operations that may fail
     tasks: {
-        ValidateCount: ({ count }: { count: number }) => {
+        ValidateCount: ({ count }) => {
             return {
                 perform: () => validateCount(count),
                 success: (text: string) => action("SetFeedback", { text }),
