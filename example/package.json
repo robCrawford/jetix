@@ -5,7 +5,8 @@
   "main": "src/ts/app.js",
   "scripts": {
     "dev": "parcel serve ./index.html",
-    "build": "cross-env NODE_ENV=production parcel build ./index.html --public-url ."
+    "build": "cross-env NODE_ENV=production parcel build ./index.html --public-url .",
+    "test": "jest"
   },
   "author": "Rob Crawford",
   "repository": {
@@ -27,5 +28,8 @@
     "hyperscript-helpers": "^3.0.3",
     "navigo": "^7.1.2",
     "snabbdom": "^0.7.3"
+  },
+  "jest": {
+    "testMatch": ["test/*"]
   }
 }

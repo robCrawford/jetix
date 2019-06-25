@@ -4,7 +4,8 @@
   "description": "A minimal ES6 component pattern for managing state with pure functions",
   "main": "jetix.ts",
   "scripts": {
-    "build": "rm -f dist/* && cp jetix.ts dist/jetix.ts && replace-in-file /.*@devBuild.*/g \"\" dist/jetix.ts --isRegex"
+    "build": "rm -f dist/* && cp jetix.ts dist/jetix.ts && replace-in-file /.*@devBuild.*/g \"\" dist/jetix.ts --isRegex",
+    "test": "jest"
   },
   "author": "Rob Crawford",
   "repository": {
@@ -14,10 +15,13 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jasmine": "^3.3.12",
+    "@types/jest": "^24.0.15",
     "@typescript-eslint/eslint-plugin": "^1.7.0",
     "@typescript-eslint/parser": "^1.7.0",
     "eslint": "^5.16.0",
+    "jest": "^24.8.0",
     "replace-in-file": "^4.0.0",
+    "ts-jest": "^24.0.2",
     "typescript": "^3.4.5"
   },
   "dependencies": {

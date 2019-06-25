@@ -6,8 +6,9 @@ describe("Jetix", function() {
     let componentId = 0;
     const getId = () => `_${componentId++}`;
 
-    function view(id, curState, props) {
+    function view(id, curState) {
         state = curState;
+        return {} as vdom.VNode;
     }
 
     beforeEach(function() {
@@ -20,7 +21,7 @@ describe("Jetix", function() {
     it("should render once following a chain of actions", function() {
         const numTestActions = 20;
 
-        renderComponent(getId(), {}, a => {
+        renderComponent<{count: number}, {}, any, any>(getId(), {}, a => {
             action = a;
             const actions = {};
 
@@ -54,7 +55,7 @@ describe("Jetix", function() {
     it("should render once following an array of actions", function() {
         const numTestActions = 20;
 
-        renderComponent(getId(), {}, a => {
+        renderComponent<{count: number}, {}, any, any>(getId(), {}, a => {
             action = a;
             const actions = {};
             const incrementRetActions = [];
@@ -97,8 +98,8 @@ describe("Jetix", function() {
         expect(patchCount).toBe(0); // No render after init
     });
 
-    function runActionsWithPromise(numTestActions, expectedPatchCount, done, initialAction) {
-        renderComponent(getId(), {}, a => {
+    function runActionsWithPromise(numTestActions, expectedPatchCount, done, initialAction?) {
+        renderComponent<{count: number}, {}, any, any>(getId(), {}, a => {
             action = a;
             const actions = {};
 
@@ -144,7 +145,10 @@ describe("Jetix", function() {
     }
 
     it("should render twice when a promise returns an array of actions", function(done) {
-        renderComponent(getId(), {}, a => {
+        renderComponent<{count: number}, {}, {
+            "Increment2": null,
+            "Increment3": null
+        }, any>(getId(), {}, a => {
             action = a;
 
             return {
@@ -209,8 +213,8 @@ describe("Jetix", function() {
         expect(patchCount).toBe(0);
     });
 
-    function runMixedActions(numTestActions, initialAction) {
-        renderComponent(getId(), {}, a => {
+    function runMixedActions(numTestActions, initialAction?) {
+        renderComponent<{count: number}, {}, any, any>(getId(), {}, a => {
             action = a;
             const actions = {};
             const actionsArray1 = [];
