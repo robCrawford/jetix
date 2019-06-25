@@ -28,7 +28,7 @@ type Tasks = {
 export default component<State, Props, Actions, Tasks>((action, task) => ({
 
     // Initial state
-    state: (props: Props) => ({
+    state: props => ({
         counter: props.start,
         feedback: ""
     }),
@@ -39,21 +39,21 @@ export default component<State, Props, Actions, Tasks>((action, task) => ({
     // Action handlers return new state, and any next actions/tasks
     actions: {
         // Inputs: action data, state, props, rootState
-        Increment: ({ step }, state: State) => {
+        Increment: ({ step }, state) => {
             state.counter += step;
             return {
                 state,
                 next: action("Validate")
             };
         },
-        Decrement: ({ step }, state: State) => {
+        Decrement: ({ step }, state) => {
             state.counter -= step;
             return {
                 state,
                 next: action("Validate")
             };
         },
-        Validate: (_, state: State) => {
+        Validate: (_, state) => {
             return {
                 state,
                 next: [
@@ -62,7 +62,7 @@ export default component<State, Props, Actions, Tasks>((action, task) => ({
                     task("ValidateCount", { count: state.counter })
                 ]};
         },
-        SetFeedback: ({ text }, state: State) => {
+        SetFeedback: ({ text }, state) => {
             state.feedback = text;
             return { state };
         }
@@ -81,7 +81,7 @@ export default component<State, Props, Actions, Tasks>((action, task) => ({
 
     // View renders from props & state
     // Inputs: component instance id, state, props, rootState
-    view(id: string, state: State, props: Props) {
+    view(id, state, props) {
         return div(".counter", [
             button(
                 { on: { click: action("Increment", { step: 1 }) } },

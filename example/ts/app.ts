@@ -30,17 +30,17 @@ export default component<State, Props, RootActions>(action => ({
     }),
 
     actions: {
-        SetPage: ({ page }, state: State) => {
+        SetPage: ({ page }, state) => {
             state.page = page;
             return { state };
         },
-        SetTheme: ({ theme }, state: State) => {
+        SetTheme: ({ theme }, state) => {
             state.theme = theme;
             return { state };
         }
     },
 
-    view(id: string, state: State) {
+    view(id, state) {
         return div(`.page.${state.theme}`,
             (() => {
                 switch (state.page) {

@@ -54,7 +54,7 @@ const internalKey = {}; // Private unique value
 let rootState;
 export let rootAction;
 
-export function component<S, P, A, T>(
+export function component<S = {}, P = {}, A = {}, T = {}>(
     getConfig: GetConfig<S, P, A, T>
 ) {
     // Pass in callback that returns component config
@@ -189,7 +189,7 @@ export function renderComponent<S, P, A, T>(
     } // @devBuild
 
     if (isRoot) {
-        rootAction = action as Function;
+        rootAction = action as GetActionThunk<A>;
         rootState = state;
     }
 
