@@ -50,7 +50,7 @@ type RenderFn<T> = (props: T) => VNode | void;
 
 const appId = "app";
 const renderRefs: { [a: string]: RenderFn<{}> } = {};
-const internalKey = {}; // Private unique value
+let internalKey = {}; // Private unique value
 let rootState;
 export let rootAction;
 
@@ -77,6 +77,9 @@ export function renderComponent<S, P, A, T>(
     getConfig: GetConfig<S, P, A, T>
 ): VNode {
     deepFreeze(props); // @devBuild
+    if ("__isTestEnv__" in props) { // @devBuild
+        internalKey = undefined; // @devBuild
+    } // @devBuild
     const isRoot = id === appId;
 
     // If component already exists, just run render() again

@@ -21,7 +21,7 @@ describe("Jetix", function() {
     it("should render once following a chain of actions", function() {
         const numTestActions = 20;
 
-        renderComponent<{count: number}, {}, any, any>(getId(), {}, a => {
+        renderComponent<{count: number}, {}, any, any>(getId(), {__isTestEnv__: true}, a => {
             action = a;
             const actions = {};
 
@@ -55,7 +55,7 @@ describe("Jetix", function() {
     it("should render once following an array of actions", function() {
         const numTestActions = 20;
 
-        renderComponent<{count: number}, {}, any, any>(getId(), {}, a => {
+        renderComponent<{count: number}, {}, any, any>(getId(), {__isTestEnv__: true}, a => {
             action = a;
             const actions = {};
             const incrementRetActions = [];
@@ -99,7 +99,7 @@ describe("Jetix", function() {
     });
 
     function runActionsWithPromise(numTestActions, expectedPatchCount, done, initialAction?) {
-        renderComponent<{count: number}, {}, any, any>(getId(), {}, a => {
+        renderComponent<{count: number}, {}, any, any>(getId(), {__isTestEnv__: true}, a => {
             action = a;
             const actions = {};
 
@@ -146,9 +146,9 @@ describe("Jetix", function() {
 
     it("should render twice when a promise returns an array of actions", function(done) {
         renderComponent<{count: number}, {}, {
-            "Increment2": null,
-            "Increment3": null
-        }, any>(getId(), {}, a => {
+            "Increment2": null;
+            "Increment3": null;
+        }, any>(getId(), {__isTestEnv__: true}, a => {
             action = a;
 
             return {
@@ -214,7 +214,7 @@ describe("Jetix", function() {
     });
 
     function runMixedActions(numTestActions, initialAction?) {
-        renderComponent<{count: number}, {}, any, any>(getId(), {}, a => {
+        renderComponent<{count: number}, {}, any, any>(getId(), {__isTestEnv__: true}, a => {
             action = a;
             const actions = {};
             const actionsArray1 = [];
