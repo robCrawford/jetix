@@ -2,6 +2,7 @@
   Lines marked `@devBuild` should be removed for production
 */
 import { patch, setHook, VNode } from "./vdom";
+export { html } from "./vdom";
 import { log } from "./jetixDev"; // @devBuild
 
 type ValueOf<T> = T[keyof T];

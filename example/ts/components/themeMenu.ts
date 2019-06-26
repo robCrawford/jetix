@@ -1,5 +1,4 @@
-import { component, rootAction } from "../../../src/jetix";
-import { html } from "../../../src/vdom";
+import { component, rootAction, html } from "../../../src/jetix";
 const { div, button } = html;
 
 

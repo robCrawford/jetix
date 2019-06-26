@@ -1,5 +1,4 @@
-import { component } from "../../../src/jetix";
-import { html } from "../../../src/vdom";
+import { component, html } from "../../../src/jetix";
 import themeMenu from "../components/themeMenu";
 const { div, h1, a } = html;
 

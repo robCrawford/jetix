@@ -1,5 +1,4 @@
-import { ActionThunk, component } from "../../../src/jetix";
-import { html } from "../../../src/vdom";
+import { ActionThunk, component, html } from "../../../src/jetix";
 const { div, button } = html;
 
 type Props = {
