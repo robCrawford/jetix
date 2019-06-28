@@ -17,10 +17,10 @@ export type GetTaskThunk<T> = (taskName: keyof T, data?: ValueOf<T>) => Promise<
 
 type Next = ActionThunk | Promise<ActionThunk> | (ActionThunk | Promise<ActionThunk>)[];
 
-export type ActionHandler<S, P, D> = (
+export type ActionHandler<D, P, S> = (
     data: D,
-    state: S,
     props: P,
+    state: S,
     rootState: {}
 ) => { state: S; next?: Next };
 
@@ -39,9 +39,9 @@ type WithTaskName<F, T> = F & { taskName: keyof T };
 export type Config<P, S, A, T> = {
     state?: (props: P) => S;
     init?: Next;
-    actions?: {[K in keyof A]: ActionHandler<S, P, A[K]>};
+    actions?: {[K in keyof A]: ActionHandler<A[K], P, S>};
     tasks?: {[K in keyof T]: TaskHandler<T[K]>};
-    view: (id: string, state: S, props: {}, rootState: {}) => VNode;
+    view: (id: string, props: P, state: S, rootState: {}) => VNode;
 };
 
 export type GetConfig<P, S, A, T> =
@@ -138,7 +138,7 @@ export function renderComponent<P, S, A, T>(
             rootState = newState;
         }
         const actionHandler = config.actions[actionName];
-        ({ state, next } = (actionHandler as ActionHandler<S, P, ValueOf<A>>)(data, newState, props, rootState));
+        ({ state, next } = (actionHandler as ActionHandler<ValueOf<A>, P, S>)(data, props, newState, rootState));
         // Freeze in dev to error on any mutation outside of action handlers
         deepFreeze(state); // @devBuild
         log.updateEnd(state); // @devBuild
@@ -175,7 +175,7 @@ export function renderComponent<P, S, A, T>(
 
     const render: RenderFn<P> = (props: P) => {
         if (!noRender) {
-            patch(componentRoot as VNode, (componentRoot = config.view(id, state, props, rootState)));
+            patch(componentRoot as VNode, (componentRoot = config.view(id, props, state, rootState)));
             setRenderRef(componentRoot, id, render);
             log.render(id, props); // @devBuild
             publish("patch");
@@ -197,7 +197,7 @@ export function renderComponent<P, S, A, T>(
         rootState = state;
     }
 
-    componentRoot = config.view(id, state, props, rootState);
+    componentRoot = config.view(id, props, state, rootState);
     setRenderRef(componentRoot, id, render);
     log.render(id, props); // @devBuild
     return componentRoot;

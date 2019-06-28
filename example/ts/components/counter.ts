@@ -36,8 +36,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
 
     // Action handlers return new state, and any next actions/tasks
     actions: {
-        // Inputs: data, state, props, rootState
-        Increment: ({ step }, state, props, rootState) => {
+        Increment: ({ step }, props, state, rootState) => {
             // NOTE: `state` is already a clone of previous state
             state.counter += step;
             return {
@@ -45,14 +44,14 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 next: action("Validate")
             };
         },
-        Decrement: ({ step }, state, props, rootState) => {
+        Decrement: ({ step }, props, state, rootState) => {
             state.counter -= step;
             return {
                 state,
                 next: action("Validate")
             };
         },
-        Validate: (_, state, props, rootState) => {
+        Validate: (_, props, state, rootState) => {
             return {
                 state,
                 next: [
@@ -61,7 +60,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                     task("ValidateCount", { count: state.counter })
                 ]};
         },
-        SetFeedback: ({ text }, state, props, rootState) => {
+        SetFeedback: ({ text }, props, state, rootState) => {
             state.feedback = text;
             return { state };
         }
@@ -79,8 +78,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     },
 
     // View renders from props & state
-    // Inputs: component instance id, state, props, rootState
-    view(id, state, props, rootState) {
+    view(id, props, state, rootState) {
         return div(".counter", [
             button(
                 { on: { click: action("Increment", { step: 1 }) } },
