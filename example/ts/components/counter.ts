@@ -37,7 +37,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     // Action handlers return new state, and any next actions/tasks
     actions: {
         Increment: ({ step }, props, state, rootState) => {
-            // NOTE: `state` is already a clone of previous state
+            // NOTE: `state` is already a deep clone of previous state
             state.counter += step;
             return {
                 state,
@@ -56,7 +56,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 state,
                 next: [
                     action("SetFeedback", { text: "Validating..." }),
-                    // Demonstrates an async task
+                    // An async task
                     task("ValidateCount", { count: state.counter })
                 ]};
         },
