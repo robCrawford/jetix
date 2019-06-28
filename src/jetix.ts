@@ -36,7 +36,7 @@ type TaskSpec = {
 
 type WithTaskName<F, T> = F & { taskName: keyof T };
 
-export type Config<S, P, A, T> = {
+export type Config<P, S, A, T> = {
     state?: (props: P) => S;
     init?: Next;
     actions?: {[K in keyof A]: ActionHandler<S, P, A[K]>};
@@ -44,8 +44,8 @@ export type Config<S, P, A, T> = {
     view: (id: string, state: S, props: {}, rootState: {}) => VNode;
 };
 
-export type GetConfig<S, P, A, T> =
-    (action: GetActionThunk<A>, task: GetTaskThunk<T>) => Config<S, P, A, T>;
+export type GetConfig<P, S, A, T> =
+    (action: GetActionThunk<A>, task: GetTaskThunk<T>) => Config<P, S, A, T>;
 
 type RenderFn<T> = (props: T) => VNode | void;
 
@@ -55,8 +55,8 @@ let internalKey = {}; // Private unique value
 let rootState;
 export let rootAction;
 
-export function component<S = {}, P = {}, A = {}, T = {}>(
-    getConfig: GetConfig<S, P, A, T>
+export function component<P = {}, S = {}, A = {}, T = {}>(
+    getConfig: GetConfig<P, S, A, T>
 ) {
     // Pass in callback that returns component config
     // Returns render function that is called by parent e.g. `counter("counter-0", { start: 0 })`
@@ -65,17 +65,17 @@ export function component<S = {}, P = {}, A = {}, T = {}>(
         if (!id.length) {
             throw Error("Component requires an id");
         }
-        return renderComponent<S, P, A, T>(id, props, getConfig);
+        return renderComponent<P, S, A, T>(id, props, getConfig);
     };
     // Add a handle to `getConfig` for tests
     renderFn.getConfig = getConfig;
     return renderFn;
 }
 
-export function renderComponent<S, P, A, T>(
+export function renderComponent<P, S, A, T>(
     id: string,
     props: P,
-    getConfig: GetConfig<S, P, A, T>
+    getConfig: GetConfig<P, S, A, T>
 ): VNode {
     deepFreeze(props); // @devBuild
     if (props && "_isTestEnv" in props) { // @devBuild

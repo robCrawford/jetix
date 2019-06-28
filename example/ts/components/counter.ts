@@ -23,7 +23,7 @@ type Tasks = {
     "ValidateCount": { count: number };
 }
 
-export default component<State, Props, Actions, Tasks>((action, task) => ({
+export default component<Props, State, Actions, Tasks>((action, task) => ({
 
     // Initial state
     state: (props) => ({

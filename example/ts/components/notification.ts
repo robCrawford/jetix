@@ -15,7 +15,7 @@ type Actions = {
 }
 
 
-export default component<State, Props, Actions>(action => ({
+export default component<Props, State, Actions>(action => ({
 
     state: () => ({
         show: true

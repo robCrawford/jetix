@@ -21,7 +21,7 @@ export type Page = "counterPage" | "aboutPage";
 export type Theme = "default" | "dark";
 
 
-export default component<State, Props, RootActions>(action => ({
+export default component<Props, State, RootActions>(action => ({
 
     state: () => ({
         theme: "default",
