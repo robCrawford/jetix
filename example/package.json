@@ -1,7 +1,7 @@
 {
-  "name": "jetix-vdom-example",
+  "name": "jetix-example-app",
   "version": "0.1.0",
-  "description": "Jetix VDOM example",
+  "description": "Jetix example app",
   "main": "src/ts/app.js",
   "scripts": {
     "dev": "parcel serve ./index.html",
@@ -15,7 +15,6 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/jasmine": "^3.3.12",
     "@types/jest": "^24.0.15",
     "@typescript-eslint/eslint-plugin": "^1.7.0",
     "@typescript-eslint/parser": "^1.7.0",

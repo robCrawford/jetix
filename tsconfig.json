@@ -9,7 +9,7 @@
         "outDir": "./dist/"
     },
     "include": [
-        "./src/**/*"
+        "./src/jetix.ts"
     ],
     "exclude": [
         ".git",

@@ -78,7 +78,7 @@ export function renderComponent<S, P, A, T>(
     getConfig: GetConfig<S, P, A, T>
 ): VNode {
     deepFreeze(props); // @devBuild
-    if ("__isTestEnv__" in props) { // @devBuild
+    if (props && "_isTestEnv" in props) { // @devBuild
         internalKey = undefined; // @devBuild
     } // @devBuild
     const isRoot = id === appId;

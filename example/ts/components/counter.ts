@@ -23,11 +23,10 @@ type Tasks = {
     "ValidateCount": { count: number };
 }
 
-
 export default component<State, Props, Actions, Tasks>((action, task) => ({
 
     // Initial state
-    state: props => ({
+    state: (props) => ({
         counter: props.start,
         feedback: ""
     }),
@@ -37,31 +36,32 @@ export default component<State, Props, Actions, Tasks>((action, task) => ({
 
     // Action handlers return new state, and any next actions/tasks
     actions: {
-        // Inputs: action data, state, props, rootState
-        Increment: ({ step }, state) => {
+        // Inputs: data, state, props, rootState
+        Increment: ({ step }, state, props, rootState) => {
+            // NOTE: `state` is already a clone of previous state
             state.counter += step;
             return {
                 state,
                 next: action("Validate")
             };
         },
-        Decrement: ({ step }, state) => {
+        Decrement: ({ step }, state, props, rootState) => {
             state.counter -= step;
             return {
                 state,
                 next: action("Validate")
             };
         },
-        Validate: (_, state) => {
+        Validate: (_, state, props, rootState) => {
             return {
                 state,
                 next: [
                     action("SetFeedback", { text: "Validating..." }),
-                    // Async task
+                    // Demonstrates an async task
                     task("ValidateCount", { count: state.counter })
                 ]};
         },
-        SetFeedback: ({ text }, state) => {
+        SetFeedback: ({ text }, state, props, rootState) => {
             state.feedback = text;
             return { state };
         }
@@ -80,7 +80,7 @@ export default component<State, Props, Actions, Tasks>((action, task) => ({
 
     // View renders from props & state
     // Inputs: component instance id, state, props, rootState
-    view(id, state, props) {
+    view(id, state, props, rootState) {
         return div(".counter", [
             button(
                 { on: { click: action("Increment", { step: 1 }) } },

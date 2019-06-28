@@ -1,31 +1,30 @@
 {
-  "name": "jetix",
-  "version": "0.1.0",
-  "description": "A minimal ES6 component pattern for managing state with pure functions",
-  "main": "jetix.ts",
-  "scripts": {
-    "build": "rm -f dist/* && cp jetix.ts dist/jetix.ts && replace-in-file /.*@devBuild.*/g \"\" dist/jetix.ts --isRegex",
-    "test": "jest"
-  },
-  "author": "Rob Crawford",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/robCrawford/jetix"
-  },
-  "license": "MIT",
-  "devDependencies": {
-    "@types/jasmine": "^3.3.12",
-    "@types/jest": "^24.0.15",
-    "@typescript-eslint/eslint-plugin": "^1.7.0",
-    "@typescript-eslint/parser": "^1.7.0",
-    "eslint": "^5.16.0",
-    "jest": "^24.8.0",
-    "replace-in-file": "^4.0.0",
-    "ts-jest": "^24.0.2",
-    "typescript": "^3.4.5"
-  },
-  "dependencies": {
-    "hyperscript-helpers": "^3.0.3",
-    "snabbdom": "^0.7.3"
-  }
+    "name": "jetix",
+    "version": "0.1.0",
+    "description": "Type safe HyperScript components using pure functions.",
+    "main": "dist/jetix.js",
+    "types": "dist/jetix.d.ts",
+    "scripts": {
+        "build:dev": "tsc",
+        "build:prod": "rm -rf ./temp && mkdir temp && cp ./src/jetix.ts ./temp && cp ./src/vdom.ts ./temp && replace-in-file /.*@devBuild.*/g \"\" ./temp/jetix.ts --isRegex",
+        "test": "jest"
+    },
+    "author": "Rob Crawford",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/robCrawford/jetix"
+    },
+    "license": "MIT",
+    "devDependencies": {
+        "@types/jest": "^24.0.15",
+        "@typescript-eslint/eslint-plugin": "^1.7.0",
+        "@typescript-eslint/parser": "^1.7.0",
+        "eslint": "^5.16.0",
+        "hyperscript-helpers": "^3.0.3",
+        "jest": "^24.8.0",
+        "replace-in-file": "^4.0.0",
+        "snabbdom": "^0.7.3",
+        "ts-jest": "^24.0.2",
+        "typescript": "^3.4.5"
+    }
 }
