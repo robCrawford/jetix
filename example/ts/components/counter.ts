@@ -37,17 +37,20 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     // Action handlers return new state, and any next actions/tasks
     actions: {
         Increment: ({ step }, props, state, rootState) => {
-            // NOTE: `state` is already a deep clone of previous state
-            state.counter += step;
             return {
-                state,
+                state: {
+                    ...state,
+                    counter: state.counter + step
+                },
                 next: action("Validate")
             };
         },
         Decrement: ({ step }, props, state, rootState) => {
-            state.counter -= step;
             return {
-                state,
+                state: {
+                    ...state,
+                    counter: state.counter - step
+                },
                 next: action("Validate")
             };
         },
@@ -61,8 +64,12 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 ]};
         },
         SetFeedback: ({ text }, props, state, rootState) => {
-            state.feedback = text;
-            return { state };
+            return {
+                state: {
+                    ...state,
+                    feedback: text
+                }
+            };
         }
     },
 
@@ -70,7 +77,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     tasks: {
         ValidateCount: ({ count }) => {
             return {
-                perform: () => validateCount(count),
+                perform: async () => validateCount(count),
                 success: (text: string) => action("SetFeedback", { text }),
                 failure: () => action("SetFeedback", { text: "Unavailable" })
             };

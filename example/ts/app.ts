@@ -2,7 +2,7 @@ import { component, html } from "../../src/jetix";
 import counterPage from "./pages/counterPage";
 import aboutPage from "./pages/aboutPage";
 import "./router";
-const { div } = html;
+const { div, button } = html;
 
 type Props = {};
 
@@ -14,14 +14,19 @@ export type State = {
 export type RootActions = {
     "SetPage": { page: Page };
     "SetTheme": { theme: Theme };
+    "SetTitle": { title: string };
 };
+
+export type RootTasks = {
+    "SetDocTitle": { title: string };
+}
 
 export type Page = "counterPage" | "aboutPage";
 
 export type Theme = "default" | "dark";
 
 
-export default component<Props, State, RootActions>(action => ({
+export default component<Props, State, RootActions, RootTasks>((action, task) => ({
 
     state: () => ({
         theme: "default",
@@ -30,17 +35,39 @@ export default component<Props, State, RootActions>(action => ({
 
     actions: {
         SetPage: ({ page }, props, state) => {
-            state.page = page;
-            return { state };
+            return {
+                state: {
+                    ...state,
+                    page
+                }
+            };
         },
         SetTheme: ({ theme }, props, state) => {
-            state.theme = theme;
-            return { state };
+            return {
+                state: {
+                    ...state,
+                    theme
+                }
+            };
+        },
+        SetTitle: ({ title }, props, state) => {
+            return {
+                state,
+                next: task("SetDocTitle", { title })
+            };
+        }
+    },
+
+    tasks: {
+        SetDocTitle: ({ title }) => {
+            return {
+                perform: async () => document.title = title
+            };
         }
     },
 
     view(id, props, state) {
-        return div(`.page.${state.theme}`,
+        return div(`.page.${state.theme}`, [
             (() => {
                 switch (state.page) {
 
@@ -56,8 +83,12 @@ export default component<Props, State, RootActions>(action => ({
                             { onSetTheme: action("SetTheme") }
                         );
                 }
-            })()
-        );
+            })(),
+            button(
+                { on: { click: action("SetTitle", { title: "Welcome" }) } },
+                "Set document title (side effect only)"
+            )
+        ]);
     }
 
 }));

@@ -22,9 +22,11 @@ export default component<Props, State, Actions>(action => ({
 
     actions: {
         Dismiss: (_, props, state) => {
-            state.show = false;
             return {
-                state,
+                state: {
+                    ...state,
+                    show: false
+                },
                 next: props.onDismiss
             };
         }

@@ -64,6 +64,14 @@ export const log = ({
             groupId = '';
         }
     },
+    noRender(id: string) {
+        if (debugEnabled) {
+            console.groupEnd();
+            let msg = `! No render - #${id} has no changes`;
+            console.log(`%c${msg}`, "color: #888");
+            groupId = '';
+        }
+    },
     manualActionError(id: string, actionName: string) {
         console.error(`Error: #${id} "${actionName}" cannot be invoked manually`);
     }

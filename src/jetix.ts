@@ -4,6 +4,7 @@
 import { patch, setHook, VNode } from "./vdom";
 export { html } from "./vdom";
 import { log } from "./jetixDev"; // @devBuild
+import equal from 'fast-deep-equal';
 
 type ValueOf<T> = T[keyof T];
 
@@ -13,7 +14,7 @@ export type GetActionThunk<A> = <K extends keyof A>(actionName: K, data?: A[K]) 
 
 export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
-export type GetTaskThunk<T> = (taskName: keyof T, data?: ValueOf<T>) => Promise<ActionThunk>;
+export type GetTaskPromise<T> = (taskName: keyof T, data?: ValueOf<T>) => Promise<ActionThunk>;
 
 type Next = ActionThunk | Promise<ActionThunk> | (ActionThunk | Promise<ActionThunk>)[];
 
@@ -30,8 +31,8 @@ type TaskResult = any; // Result from the effect promise
 
 type TaskSpec = {
     perform: () => Promise<TaskResult>;
-    success: (a: TaskResult) => ActionThunk;
-    failure: (a: TaskResult) => ActionThunk;
+    success?: (a: TaskResult) => ActionThunk;
+    failure?: (a: TaskResult) => ActionThunk;
 };
 
 type WithTaskName<F, T> = F & { taskName: keyof T };
@@ -45,14 +46,16 @@ export type Config<P, S, A, T> = {
 };
 
 export type GetConfig<P, S, A, T> =
-    (action: GetActionThunk<A>, task: GetTaskThunk<T>) => Config<P, S, A, T>;
+    (action: GetActionThunk<A>, task: GetTaskPromise<T>) => Config<P, S, A, T>;
 
 type RenderFn<T> = (props: T) => VNode | void;
 
 const appId = "app";
-const renderRefs: { [a: string]: RenderFn<{}> } = {};
+const renderRefs: { [id: string]: RenderFn<{}> } = {};
+const prevProps: { [id: string]: {} } = {};
 let internalKey = {}; // Private unique value
 let rootState;
+let globalStateChanged = false;
 export let rootAction;
 
 export function component<P = {}, S = {}, A = {}, T = {}>(
@@ -72,12 +75,12 @@ export function component<P = {}, S = {}, A = {}, T = {}>(
     return renderFn;
 }
 
-export function renderComponent<P, S, A, T>(
+export function renderComponent<P extends {}, S extends {}, A, T>(
     id: string,
     props: P,
     getConfig: GetConfig<P, S, A, T>
 ): VNode {
-    deepFreeze(props); // @devBuild
+    deepFreeze(props);
     if (props && "_isTestEnv" in props) { // @devBuild
         internalKey = undefined; // @devBuild
     } // @devBuild
@@ -111,7 +114,7 @@ export function renderComponent<P, S, A, T>(
         };
     };
 
-    const task: GetTaskThunk<T> = (taskName, data) => {
+    const task: GetTaskPromise<T> = (taskName, data) => {
         if (!config.tasks) {
             throw Error(`tasks ${String(config.tasks)}`);
         }
@@ -121,26 +124,26 @@ export function renderComponent<P, S, A, T>(
         return promise.then(success).catch(failure);
     };
 
-    // Invoke the function passed into `component()` with props and these functions
     const config = getConfig(action, task);
     let state = config.state && config.state(props);
     let noRender = 0;
+    let stateChanged = false;
 
     function update(actionName: keyof A, data?: ValueOf<A>): void {
         let next;
-        log.updateStart(id, state, String(actionName), data); // @devBuild
-        const newState =
-            clone( // @devBuild
-                state
-            ) // @devBuild
-        ;
+        const prevState = deepFreeze(state);
+        prevProps[id] = props;
+        log.updateStart(id, prevState, String(actionName), data); // @devBuild
+
+        ({ state, next } = (config.actions[actionName] as ActionHandler<ValueOf<A>, P, S>)(
+            data, props, prevState, rootState
+        ));
+        // Action handlers return existing state by ref if no changes
+        stateChanged = prevState !== state;
         if (isRoot) {
-            rootState = newState;
+            rootState = state;
+            globalStateChanged = stateChanged;
         }
-        const actionHandler = config.actions[actionName];
-        ({ state, next } = (actionHandler as ActionHandler<ValueOf<A>, P, S>)(data, props, newState, rootState));
-        // Freeze in dev to error on any mutation outside of action handlers
-        deepFreeze(state); // @devBuild
         log.updateEnd(state); // @devBuild
         run(next, props, String(actionName));
     }
@@ -175,10 +178,18 @@ export function renderComponent<P, S, A, T>(
 
     const render: RenderFn<P> = (props: P) => {
         if (!noRender) {
-            patch(componentRoot as VNode, (componentRoot = config.view(id, props, state, rootState)));
-            setRenderRef(componentRoot, id, render);
-            log.render(id, props); // @devBuild
-            publish("patch");
+            // `state` retains ref when stable but `props` is always a new object so deep compare
+            const renderRequired = stateChanged || globalStateChanged || !equal(prevProps[id], props);
+            if (renderRequired) {
+                patch(componentRoot as VNode, (componentRoot = config.view(id, props, state, rootState)));
+                setRenderRef(componentRoot, id, render);
+                log.render(id, props); // @devBuild
+                publish("patch");
+                globalStateChanged = false;
+            }
+            else { // @devBuild
+                log.noRender(id); // @devBuild
+            } // @devBuild
         }
         return componentRoot;
     }
@@ -236,14 +247,10 @@ function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
         renderRefs[id] = render;
         setHook(vnode, "destroy", () => {
             delete renderRefs[id];
+            delete prevProps[id];
         });
     });
 }
-
-function clone<T>(o: T): T { // @devBuild
-    // Should only be cloning simple state models
-    return o && JSON.parse(JSON.stringify(o)); // @devBuild
-} // @devBuild
 
 function deepFreeze<T>(o: T): T { // @devBuild
     if (o) { // @devBuild
