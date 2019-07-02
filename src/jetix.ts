@@ -25,6 +25,7 @@ export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 export type TaskThunk = {
     (): Promise<Next>;
     type: ThunkType;
+    taskName: string;
 };
 
 export type GetTaskThunk<T> = (taskName: keyof T, data?: ValueOf<T>) => TaskThunk;
@@ -47,8 +48,6 @@ type TaskSpec = {
     success?: (a: TaskResult) => Next;
     failure?: (a: TaskResult) => Next;
 };
-
-type WithTaskName<F, T> = F & { taskName: keyof T };
 
 export type Config<P, S, A, T> = {
     state?: (props: P) => S;
@@ -136,10 +135,10 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         const taskThunk = () => {
             const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
             const promise = perform();
-            (promise.then as WithTaskName<typeof promise.then, T>).taskName = taskName;
             return promise.then(success).catch(failure);
         };
         taskThunk.type = ThunkType.Task;
+        taskThunk.taskName = String(taskName);
         return taskThunk;
     };
 
@@ -172,8 +171,8 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             render(props);
         }
         else if ((next as ActionThunk).type === ThunkType.Action) {
-            // An action thunk is either invoked here or from the DOM
-            // `internalKey` prevents manual calls from outside
+            // An action thunk may only be invoked here or from the DOM
+            // `internalKey` prevents any manual calls from outside
             (next as ActionThunk)(internalKey);
         }
         else if (Array.isArray(next)) {
@@ -184,7 +183,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         }
         else if ((next as TaskThunk).type === ThunkType.Task) {
             const promise = (next as TaskThunk)();
-            const taskName = (promise.then as WithTaskName<typeof promise.then, T>).taskName || "unknown";
+            const taskName = (next as TaskThunk).taskName;
             promise
                 .then(n => {
                     log.taskSuccess(id, String(taskName)); // @devBuild
