@@ -1,5 +1,5 @@
 /*
-  API for testing Jetix components
+  API for unit testing Jetix components
 */
 export function initComponent(component, props) {
 
@@ -24,8 +24,8 @@ export function initComponent(component, props) {
         initialState,
 
         // Run an action - returns output as data `{ actionName, data }` for testing output expectations
-        runAction(actionName: string, data?: {}, state = initialState) {
-            return config.actions[actionName](data, state);
+        runAction(actionName: string, data?: {}, props?: {}, state = initialState) {
+            return config.actions[actionName](data, props, state);
         },
 
         // Get task as data for manually testing `success` and `failure` output expectations

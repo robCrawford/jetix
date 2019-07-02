@@ -1,6 +1,5 @@
 /*
-  @flow
-  These utils are imported for dev only
+  Logging for Jetix lifecycle
 */
 let groupId = '';
 
