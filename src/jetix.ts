@@ -23,7 +23,7 @@ export type GetActionThunk<A> = <K extends keyof A>(actionName: K, data?: A[K]) 
 export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
 export type TaskThunk = {
-    (): Promise<ActionThunk>;
+    (): Promise<Next>;
     type: ThunkType;
 };
 
@@ -44,8 +44,8 @@ type TaskResult = any; // Result from the effect promise
 
 type TaskSpec = {
     perform: () => Promise<TaskResult>;
-    success?: (a: TaskResult) => ActionThunk;
-    failure?: (a: TaskResult) => ActionThunk;
+    success?: (a: TaskResult) => Next;
+    failure?: (a: TaskResult) => Next;
 };
 
 type WithTaskName<F, T> = F & { taskName: keyof T };

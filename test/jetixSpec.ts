@@ -28,14 +28,16 @@ describe("Jetix", function() {
             for (let i = 1; i < numTestActions; i++) {
                 actions["Increment" + i] =
                     (_, props, state) => {
-                        state.count++;
-                        return { state, next: action("Increment" + (i+1)) };
+                        return {
+                            state: { ...state, count: state.count + 1 }, next: action("Increment" + (i+1))
+                        };
                     };
             }
             actions["Increment" + numTestActions] =
                 (_, props, state) => {
-                    state.count++;
-                    return { state };
+                    return {
+                        state: { ...state, count: state.count + 1 }
+                    };
                 };
 
             return {
@@ -63,8 +65,9 @@ describe("Jetix", function() {
             for (let i = 1; i <= numTestActions; i++) {
                 actions["Increment" + i] =
                     (_, props, state) => {
-                        state.count++;
-                        return { state };
+                        return {
+                            state: { ...state, count: state.count + 1 }
+                        };
                     };
                 incrementRetActions.push(action("Increment" + i));
             }
@@ -99,39 +102,41 @@ describe("Jetix", function() {
     });
 
     function runActionsWithPromise(numTestActions, expectedPatchCount, done, initialAction?) {
-        renderComponent<{}, {count: number}, any, any>(getId(), {_isTestEnv: true}, a => {
+        renderComponent<{}, {count: number}, any, any>(getId(), {_isTestEnv: true}, (a, task) => {
             action = a;
             const actions = {};
 
             for (let i = 1; i < numTestActions; i++) {
                 actions["Increment" + i] =
                     (_, props, state) => {
-                        state.count++;
-                        return { state, next: action("Increment" + (i+1)) };
+                        return {
+                            state: { ...state, count: state.count + 1 },
+                            next: action("Increment" + (i+1))
+                        };
                     };
             }
             actions["Increment" + numTestActions] =
                 (_, props, state) => {
-                    state.count++;
+                    const newState = { ...state, count: state.count + 1 };
                     setTimeout(() => {
                         // After last action has been processed
-                        logResult(state.count, patchCount);
-                        expect(state.count).toBe(numTestActions);
+                        logResult(newState.count, patchCount);
+                        expect(newState.count).toBe(numTestActions);
                         expect(patchCount).toBe(expectedPatchCount);
                         done();
                     });
-                    return { state };
+                    return {
+                        state: newState
+                    };
                 };
 
-            // Overwrite middle action with promise
+            // Overwrite middle action with task
             const midIndex = numTestActions/2;
             actions["Increment" + midIndex] =
                 (_, props, state) => {
-                    state.count++;
                     return {
-                        state,
-                        next: new Promise(resolve => setTimeout(() => resolve(), 100))
-                            .then(() => action("Increment" + (midIndex + 1)))
+                        state: { ...state, count: state.count + 1 },
+                        next: task("TestAsync")
                     };
                 };
 
@@ -139,6 +144,12 @@ describe("Jetix", function() {
                 state: () => ({ count: 0 }),
                 init: initialAction ? a(initialAction) : undefined,
                 actions,
+                tasks: {
+                    TestAsync: () => ({
+                        perform: () => new Promise(resolve => setTimeout(() => resolve(), 100)),
+                        success: () => action("Increment" + (midIndex + 1))
+                    })
+                },
                 view
             };
         });
@@ -148,35 +159,42 @@ describe("Jetix", function() {
         renderComponent<{}, {count: number}, {
             "Increment2": null;
             "Increment3": null;
-        }, any>(getId(), {_isTestEnv: true}, a => {
+        }, any>(getId(), {_isTestEnv: true}, (a, task) => {
             action = a;
 
             return {
                 state: () => ({ count: 0 }),
                 actions: {
                     Increment1: (_, props, state) => {
-                        state.count++;
                         return {
-                            state,
-                            next: new Promise(resolve => setTimeout(() => resolve(), 100))
-                                .then(() => [ action("Increment2"), action("Increment3") ])
+                            state: { ...state, count: state.count + 1 },
+                            next: task("TestAsync")
                         };
                     },
                     Increment2: (_, props, state) => {
-                        state.count++;
-                        return { state };
+                        return {
+                            state: { ...state, count: state.count + 1 }
+                        };
                     },
                     Increment3: (_, props, state) => {
-                        state.count++;
+                        const newState = { ...state, count: state.count + 1 };
                         setTimeout(() => {
                             // After last action has been processed
-                            logResult(state.count, patchCount);
-                            expect(state.count).toBe(3);
+                            logResult(newState.count, patchCount);
+                            expect(newState.count).toBe(3);
                             expect(patchCount).toBe(2);
                             done();
                         });
-                        return { state };
+                        return {
+                            state: newState
+                        };
                     }
+                },
+                tasks: {
+                    "TestAsync": () => ({
+                        perform: () => new Promise(resolve => setTimeout(() => resolve(), 100)),
+                        success: () => [ action("Increment2"), action("Increment3") ]
+                    })
                 },
                 view
             };
@@ -224,8 +242,9 @@ describe("Jetix", function() {
             for (let i = 1; i <= numTestActions; i++) {
                 actions["IncrementA1-" + i] =
                     (_, props, state) => {
-                        state.count++;
-                        return { state };
+                        return {
+                            state: { ...state, count: state.count + 1 }
+                        };
                     };
                 actionsArray1.push(action("IncrementA1-" + i));
             }
@@ -233,9 +252,8 @@ describe("Jetix", function() {
             for (let i = 1; i < numTestActions; i++) {
                 actions["IncrementS1-" + i] =
                     (_, props, state) => {
-                        state.count++;
                         return {
-                            state,
+                            state: { ...state, count: state.count + 1 },
                             next: action("IncrementS1-" + (i+1))
                         };
                     };
@@ -243,9 +261,8 @@ describe("Jetix", function() {
             actions["IncrementS1-" + numTestActions] =
                 (_, props, state) => {
                     // "IncrementS1-20" returns `actionsArray1` array
-                    state.count++;
                     return {
-                        state,
+                        state: { ...state, count: state.count + 1 },
                         next: actionsArray1
                     };
                 };
@@ -253,32 +270,29 @@ describe("Jetix", function() {
             for (let i = 1; i < numTestActions/2; i++) {
                 actions["IncrementS2-" + i] =
                     (_, props, state) => {
-                        state.count++;
                         return {
-                            state,
+                            state: { ...state, count: state.count + 1 },
                             next: action("IncrementS2-" + (i+1))
                         };
                     };
             }
             actions["IncrementS2-" + numTestActions/2] =
                 (_, props, state) => {
-                    state.count++;
-                    return { state };
+                    return { state: { ...state, count: state.count + 1 } };
                 };
 
             // "IncrementA2-Init" returns `actionsArray2` array
             for (let i = 1; i <= numTestActions; i++) {
                 actions["IncrementA2-" + i] =
                     (_, props, state) => {
-                        state.count++;
                         // Half return chain "IncrementS1-1" - "IncrementS1-20",
                         // where "IncrementS1-20" returns `actionsArray1`
                         if (i % 2) {
-                            return { state, next: action("IncrementS1-1") };
+                            return { state: { ...state, count: state.count + 1 }, next: action("IncrementS1-1") };
                         }
                         // Half return chain "IncrementS2-1" - "IncrementS2-10"
                         else {
-                            return { state, next: action("IncrementS2-1") };
+                            return { state: { ...state, count: state.count + 1 }, next: action("IncrementS2-1") };
                         }
                     };
                 actionsArray2.push(action("IncrementA2-" + i));
