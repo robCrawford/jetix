@@ -8,15 +8,28 @@ import equal from 'fast-deep-equal';
 
 type ValueOf<T> = T[keyof T];
 
-export type ActionThunk = (data?: {}) => void | ActionThunk; // Argument only used when currying
+enum ThunkType {
+    Action,
+    Task
+};
+
+export type ActionThunk = {
+    (data?: {}): void | ActionThunk; // Argument only used when currying
+    type: ThunkType;
+}
 
 export type GetActionThunk<A> = <K extends keyof A>(actionName: K, data?: A[K]) => ActionThunk;
 
 export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
-export type GetTaskPromise<T> = (taskName: keyof T, data?: ValueOf<T>) => Promise<ActionThunk>;
+export type TaskThunk = {
+    (): Promise<ActionThunk>;
+    type: ThunkType;
+};
 
-type Next = ActionThunk | Promise<ActionThunk> | (ActionThunk | Promise<ActionThunk>)[];
+export type GetTaskThunk<T> = (taskName: keyof T, data?: ValueOf<T>) => TaskThunk;
+
+type Next = ActionThunk | TaskThunk | (ActionThunk | TaskThunk)[];
 
 export type ActionHandler<D, P, S> = (
     data: D,
@@ -46,7 +59,7 @@ export type Config<P, S, A, T> = {
 };
 
 export type GetConfig<P, S, A, T> =
-    (action: GetActionThunk<A>, task: GetTaskPromise<T>) => Config<P, S, A, T>;
+    (action: GetActionThunk<A>, task: GetTaskThunk<T>) => Config<P, S, A, T>;
 
 type RenderFn<T> = (props: T) => VNode | void;
 
@@ -93,7 +106,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     }
 
     const action: GetActionThunk<A> = (actionName, data): ActionThunk => {
-        return (thunkInput?: ValueOf<A> | {}): void => {
+        const actionThunk = (thunkInput?: ValueOf<A> | {}): void => {
             if (thunkInput && "srcElement" in thunkInput) {
                 // Invoked from the DOM, `thunkInput` is the (unused) event
                 update(actionName, data);
@@ -112,16 +125,22 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
                 log.manualActionError(id, String(actionName)); // @devBuild
             } // @devBuild
         };
+        actionThunk.type = ThunkType.Action;
+        return actionThunk;
     };
 
-    const task: GetTaskPromise<T> = (taskName, data) => {
+    const task: GetTaskThunk<T> = (taskName, data): TaskThunk => {
         if (!config.tasks) {
             throw Error(`tasks ${String(config.tasks)}`);
         }
-        const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
-        const promise = perform();
-        (promise.then as WithTaskName<typeof promise.then, T>).taskName = taskName;
-        return promise.then(success).catch(failure);
+        const taskThunk = () => {
+            const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
+            const promise = perform();
+            (promise.then as WithTaskName<typeof promise.then, T>).taskName = taskName;
+            return promise.then(success).catch(failure);
+        };
+        taskThunk.type = ThunkType.Task;
+        return taskThunk;
     };
 
     const config = getConfig(action, task);
@@ -152,10 +171,10 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         if (!next) {
             render(props);
         }
-        else if (typeof next === "function") {
+        else if ((next as ActionThunk).type === ThunkType.Action) {
             // An action thunk is either invoked here or from the DOM
             // `internalKey` prevents manual calls from outside
-            next(internalKey);
+            (next as ActionThunk)(internalKey);
         }
         else if (Array.isArray(next)) {
             noRender++;
@@ -163,9 +182,10 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             noRender--;
             render(props);
         }
-        else if (typeof next.then === "function") {
-            const taskName = (next.then as WithTaskName<typeof next.then, T>).taskName || "unknown";
-            next
+        else if ((next as TaskThunk).type === ThunkType.Task) {
+            const promise = (next as TaskThunk)();
+            const taskName = (promise.then as WithTaskName<typeof promise.then, T>).taskName || "unknown";
+            promise
                 .then(n => {
                     log.taskSuccess(id, String(taskName)); // @devBuild
                     run(n, props, prevTag);
