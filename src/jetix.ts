@@ -67,7 +67,7 @@ const renderRefs: { [id: string]: RenderFn<{}> } = {};
 const prevProps: { [id: string]: {} } = {};
 let internalKey = {}; // Private unique value
 let rootState;
-let globalStateChanged = false;
+let rootStateChanged = false;
 export let rootAction;
 
 export function component<P = {}, S = {}, A = {}, T = {}>(
@@ -160,7 +160,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         stateChanged = prevState !== state;
         if (isRoot) {
             rootState = state;
-            globalStateChanged = stateChanged;
+            rootStateChanged = stateChanged;
         }
         log.updateEnd(state); // @devBuild
         run(next, props, String(actionName));
@@ -197,14 +197,16 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
 
     const render: RenderFn<P> = (props: P) => {
         if (!noRender) {
-            // `state` retains ref when stable but `props` is always a new object so deep compare
-            const renderRequired = stateChanged || globalStateChanged || !equal(prevProps[id], props);
+            // `state` is same ref when unchanged but `props` is always a new object so deep compare
+            const renderRequired = stateChanged || rootStateChanged || !equal(prevProps[id], props);
             if (renderRequired) {
                 patch(componentRoot as VNode, (componentRoot = config.view(id, props, state, rootState)));
                 setRenderRef(componentRoot, id, render);
                 log.render(id, props); // @devBuild
                 publish("patch");
-                globalStateChanged = false;
+                if (isRoot) {
+                    rootStateChanged = false;
+                }
             }
             else { // @devBuild
                 log.noRender(id); // @devBuild
@@ -271,22 +273,22 @@ function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
     });
 }
 
-function deepFreeze<T>(o: T): T { // @devBuild
-    if (o) { // @devBuild
-        Object.freeze(o); // @devBuild
-        Object.getOwnPropertyNames(o).forEach((p: string) => { // @devBuild
-            if ( // @devBuild
-                o.hasOwnProperty(p) && // @devBuild
-                o[p] !== null && // @devBuild
-                (typeof o[p] === "object" || typeof o[p] === "function") && // @devBuild
-                !Object.isFrozen(o[p]) // @devBuild
-            ) { // @devBuild
-                deepFreeze(o[p]); // @devBuild
-            } // @devBuild
-        }); // @devBuild
-    } // @devBuild
-    return o; // @devBuild
-} // @devBuild
+function deepFreeze<T>(o: T): T {
+    if (o) {
+        Object.freeze(o);
+        Object.getOwnPropertyNames(o).forEach((p: string) => {
+            if (
+                o.hasOwnProperty(p) &&
+                o[p] !== null &&
+                (typeof o[p] === "object" || typeof o[p] === "function") &&
+                !Object.isFrozen(o[p])
+            ) {
+                deepFreeze(o[p]);
+            }
+        });
+    }
+    return o;
+}
 
 // Pub/sub
 export function subscribe(type: string, listener: EventListener) {
