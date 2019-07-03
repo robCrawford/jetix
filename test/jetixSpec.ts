@@ -1,5 +1,7 @@
-import { renderComponent } from "../src/jetix";
+import { renderComponent, _setTestKey } from "../src/jetix";
 import * as vdom from "../src/vdom";
+
+const testKey = _setTestKey({});
 
 describe("Jetix", function() {
     let patchCount, state, action;
@@ -21,7 +23,7 @@ describe("Jetix", function() {
     it("should render once following a chain of actions", function() {
         const numTestActions = 20;
 
-        renderComponent<{}, {count: number}, any, any>(getId(), {_isTestEnv: true}, a => {
+        renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
             action = a;
             const actions = {};
 
@@ -48,7 +50,7 @@ describe("Jetix", function() {
         });
 
         expect(patchCount).toBe(0);
-        action("Increment1")();
+        action("Increment1")(testKey);
         logResult(state.count, patchCount);
         expect(state.count).toBe(numTestActions);
         expect(patchCount).toBe(1);
@@ -57,7 +59,7 @@ describe("Jetix", function() {
     it("should render once following an array of actions", function() {
         const numTestActions = 20;
 
-        renderComponent<{}, {count: number}, any, any>(getId(), {_isTestEnv: true}, a => {
+        renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
             action = a;
             const actions = {};
             const incrementRetActions = [];
@@ -82,7 +84,7 @@ describe("Jetix", function() {
         });
 
         expect(patchCount).toBe(0);
-        action("Increment")();
+        action("Increment")(testKey);
         logResult(state.count, patchCount);
         expect(state.count).toBe(numTestActions);
         expect(patchCount).toBe(1);
@@ -92,7 +94,7 @@ describe("Jetix", function() {
         const numTestActions = 20;
         runActionsWithPromise(numTestActions, 2, done);
         expect(patchCount).toBe(0);
-        action("Increment1")();
+        action("Increment1")(testKey);
     });
 
     it("should render once when initial action chain contains a promise", function(done) {
@@ -102,7 +104,7 @@ describe("Jetix", function() {
     });
 
     function runActionsWithPromise(numTestActions, expectedPatchCount, done, initialAction?) {
-        renderComponent<{}, {count: number}, any, any>(getId(), {_isTestEnv: true}, (a, task) => {
+        renderComponent<{}, {count: number}, any, any>(getId(), {}, (a, task) => {
             action = a;
             const actions = {};
 
@@ -159,7 +161,7 @@ describe("Jetix", function() {
         renderComponent<{}, {count: number}, {
             "Increment2": null;
             "Increment3": null;
-        }, any>(getId(), {_isTestEnv: true}, (a, task) => {
+        }, any>(getId(), {}, (a, task) => {
             action = a;
 
             return {
@@ -201,7 +203,7 @@ describe("Jetix", function() {
         });
 
         expect(patchCount).toBe(0);
-        action("Increment1")();
+        action("Increment1")(testKey);
     });
 
     it("should render once following a mix of action arrays and chains", function() {
@@ -209,7 +211,7 @@ describe("Jetix", function() {
 
         expect(patchCount).toBe(0);
         runMixedActions(numTestActions);
-        action("IncrementA2-Init")();
+        action("IncrementA2-Init")(testKey);
 
         logResult(state.count, patchCount);
         expect(state.count).toBe(
@@ -232,7 +234,7 @@ describe("Jetix", function() {
     });
 
     function runMixedActions(numTestActions, initialAction?) {
-        renderComponent<{}, {count: number}, any, any>(getId(), {_isTestEnv: true}, a => {
+        renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
             action = a;
             const actions = {};
             const actionsArray1 = [];

@@ -68,6 +68,7 @@ const prevProps: { [id: string]: {} } = {};
 let internalKey = {}; // Private unique value
 let rootState;
 let rootStateChanged = false;
+export const _setTestKey = k => internalKey = k;
 export let rootAction;
 
 export function component<P = {}, S = {}, A = {}, T = {}>(
@@ -93,9 +94,6 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     getConfig: GetConfig<P, S, A, T>
 ): VNode {
     deepFreeze(props);
-    if (props && "_isTestEnv" in props) { // @devBuild
-        internalKey = undefined; // @devBuild
-    } // @devBuild
     const isRoot = id === appId;
 
     // If component already exists, just run render() again
