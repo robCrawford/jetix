@@ -6,6 +6,7 @@
 - Based on [Elm's MUV pattern](https://guide.elm-lang.org/architecture/), unidirectional and lightweight.
 - [Effects as data](https://www.youtube.com/watch?v=6EdXaWfoslc) means components can consist entirely of pure functions.
 - [hyperscript-helpers](https://github.com/ohanhi/hyperscript-helpers) means the view is just JS functions.
+- Optimised for [*least possible number of renders*](https://github.com/robCrawford/jetix/blob/master/test/jetixSpec.ts) and then to only the affected tree depth.  
 
 Also contains lightweight prevention of anti-patterns like state mutation and manually calling declarative actions.  
 See a [single page app example](http://robcrawford.github.io/demos/jetix/?debug) and its [src](https://github.com/robCrawford/jetix/tree/master/example).  
@@ -54,17 +55,20 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     // Action handlers return new state, and any next actions/tasks
     actions: {
         Increment: ({ step }, props, state, rootState) => {
-            // NOTE: `state` is already a deep clone of previous state
-            state.counter += step;
             return {
-                state,
+                state: {
+                    ...state,
+                    counter: state.counter + step
+                },
                 next: action("Validate")
             };
         },
         Decrement: ({ step }, props, state, rootState) => {
-            state.counter -= step;
             return {
-                state,
+                state: {
+                    ...state,
+                    counter: state.counter - step
+                },
                 next: action("Validate")
             };
         },
@@ -78,8 +82,12 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 ]};
         },
         SetFeedback: ({ text }, props, state, rootState) => {
-            state.feedback = text;
-            return { state };
+            return {
+                state: {
+                    ...state,
+                    feedback: text
+                }
+            };
         }
     },
 
@@ -87,7 +95,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     tasks: {
         ValidateCount: ({ count }) => {
             return {
-                perform: () => validateCount(count),
+                perform: async () => validateCount(count),
                 success: (text: string) => action("SetFeedback", { text }),
                 failure: () => action("SetFeedback", { text: "Unavailable" })
             };
