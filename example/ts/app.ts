@@ -14,7 +14,6 @@ export type State = {
 export type RootActions = {
     "SetPage": { page: Page };
     "SetTheme": { theme: Theme };
-    "SetTitle": { title: string };
 };
 
 export type RootTasks = {
@@ -49,16 +48,11 @@ export default component<Props, State, RootActions, RootTasks>((action, task) =>
                     theme
                 }
             };
-        },
-        SetTitle: ({ title }, props, state) => {
-            return {
-                state,
-                next: task("SetDocTitle", { title })
-            };
         }
     },
 
     tasks: {
+        // Demonstrates a task that is only an effect
         SetDocTitle: ({ title }) => {
             return {
                 perform: async () => document.title = title
@@ -85,7 +79,7 @@ export default component<Props, State, RootActions, RootTasks>((action, task) =>
                 }
             })(),
             button(
-                { on: { click: action("SetTitle", { title: "Welcome" }) } },
+                { on: { click: task("SetDocTitle", { title: "Welcome" }) } },
                 "Set document title (side effect only)"
             )
         ]);

@@ -104,7 +104,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
 
     const action: GetActionThunk<A> = (actionName, data): ActionThunk => {
         const actionThunk = (thunkInput: ValueOf<A> | {}): void => {
-            if (thunkInput && "srcElement" in thunkInput) {
+            if (isDomEvent(thunkInput)) {
                 // Invoked from the DOM, `thunkInput` is the (unused) event
                 update(actionName, data);
             }
@@ -130,11 +130,18 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         if (!config.tasks) {
             throw Error(`tasks ${String(config.tasks)}`);
         }
+        const resolve = () => {
+            const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
+            const promise = perform();
+            return promise.then(success).catch(failure);
+        };
         const taskThunk = (thunkInput: {}) => {
-            if (thunkInput === internalKey) {
-                const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
-                const promise = perform();
-                return promise.then(success).catch(failure);
+            if (isDomEvent(thunkInput)) {
+                // Invoked from the DOM, `thunkInput` is the (unused) event
+                resolve();
+            }
+            else if (thunkInput === internalKey) {
+                return resolve();
             }
             else { // @devBuild
                 log.manualError(id, String(taskName)); // @devBuild
@@ -256,6 +263,10 @@ export function mount<T, P>({ app, props, init }: {
         };
         init(runRootAction);
     }
+}
+
+function isDomEvent(e: any): boolean {
+    return e && "eventPhase" in e;
 }
 
 function renderById(id: string, props: {}): VNode | void {
