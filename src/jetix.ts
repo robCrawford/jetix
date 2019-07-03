@@ -14,7 +14,7 @@ enum ThunkType {
 };
 
 export type ActionThunk = {
-    (data?: {}): void | ActionThunk; // Argument only used when currying
+    (data: {}): void | ActionThunk; // Returns another `ActionThunk` when currying
     type: ThunkType;
 }
 
@@ -23,7 +23,7 @@ export type GetActionThunk<A> = <K extends keyof A>(actionName: K, data?: A[K]) 
 export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
 export type TaskThunk = {
-    (): Promise<Next>;
+    (data: {}): Promise<Next>;
     type: ThunkType;
     taskName: string;
 };
@@ -103,7 +103,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     }
 
     const action: GetActionThunk<A> = (actionName, data): ActionThunk => {
-        const actionThunk = (thunkInput?: ValueOf<A> | {}): void => {
+        const actionThunk = (thunkInput: ValueOf<A> | {}): void => {
             if (thunkInput && "srcElement" in thunkInput) {
                 // Invoked from the DOM, `thunkInput` is the (unused) event
                 update(actionName, data);
@@ -119,7 +119,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
                 action(actionName, thunkInput as ValueOf<A>);
             }
             else { // @devBuild
-                log.manualActionError(id, String(actionName)); // @devBuild
+                log.manualError(id, String(actionName)); // @devBuild
             } // @devBuild
         };
         actionThunk.type = ThunkType.Action;
@@ -130,10 +130,15 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         if (!config.tasks) {
             throw Error(`tasks ${String(config.tasks)}`);
         }
-        const taskThunk = () => {
-            const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
-            const promise = perform();
-            return promise.then(success).catch(failure);
+        const taskThunk = (thunkInput: {}) => {
+            if (thunkInput === internalKey) {
+                const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
+                const promise = perform();
+                return promise.then(success).catch(failure);
+            }
+            else { // @devBuild
+                log.manualError(id, String(taskName)); // @devBuild
+            } // @devBuild
         };
         taskThunk.type = ThunkType.Task;
         taskThunk.taskName = String(taskName);
@@ -180,7 +185,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             render(props);
         }
         else if ((next as TaskThunk).type === ThunkType.Task) {
-            const promise = (next as TaskThunk)();
+            const promise = (next as TaskThunk)(internalKey);
             const taskName = (next as TaskThunk).taskName;
             promise
                 .then(n => {

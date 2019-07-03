@@ -71,8 +71,8 @@ export const log = ({
             groupId = '';
         }
     },
-    manualActionError(id: string, actionName: string) {
-        console.error(`Error: #${id} "${actionName}" cannot be invoked manually`);
+    manualError(id: string, name: string) {
+        console.error(`Error: #${id} "${name}" cannot be invoked manually`);
     }
 });
 
