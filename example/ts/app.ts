@@ -2,7 +2,7 @@ import { component, html } from "../../src/jetix";
 import counterPage from "./pages/counterPage";
 import aboutPage from "./pages/aboutPage";
 import "./router";
-const { div, button } = html;
+const { div } = html;
 
 type Props = {};
 
@@ -32,6 +32,7 @@ export default component<Props, State, RootActions, RootTasks>((action, task) =>
         page: null
     }),
 
+    // Root actions, import into any component
     actions: {
         SetPage: ({ page }, props, state) => {
             return {
@@ -51,13 +52,12 @@ export default component<Props, State, RootActions, RootTasks>((action, task) =>
         }
     },
 
+    // Root tasks, import into any component
     tasks: {
         // Demonstrates a task that is only an effect
-        SetDocTitle: ({ title }) => {
-            return {
-                perform: async () => document.title = title
-            };
-        }
+        SetDocTitle: ({ title }) => ({
+            perform: async () => document.title = title
+        })
     },
 
     view(id, props, state) {
@@ -66,22 +66,16 @@ export default component<Props, State, RootActions, RootTasks>((action, task) =>
                 switch (state.page) {
 
                     case "aboutPage":
-                        return aboutPage(
-                            "#about-page",
-                            { onSetTheme: action("SetTheme") }
-                        );
+                        return div('.about-layout', [
+                            aboutPage( "#about-page", { onSetTheme: action("SetTheme") })
+                        ]);
 
                     case "counterPage":
-                        return counterPage(
-                            "#counter-page",
-                            { onSetTheme: action("SetTheme") }
-                        );
+                        return div('.counter-layout', [
+                            counterPage( "#counter-page", { onSetTheme: action("SetTheme") })
+                        ]);
                 }
-            })(),
-            button(
-                { on: { click: task("SetDocTitle", { title: "Welcome" }) } },
-                "Set document title (side effect only)"
-            )
+            })()
         ]);
     }
 

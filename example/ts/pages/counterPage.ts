@@ -1,10 +1,12 @@
-import { component, html } from "../../../src/jetix";
+import { component, html, rootTask } from "../../../src/jetix";
 import counter from "../components/counter";
 import themeMenu from "../components/themeMenu";
 const { div, h1, i, a } = html;
 
 
 export default component(() => ({
+
+    init: rootTask("SetDocTitle", { title: "Counter" }),
 
     view() {
         return div([

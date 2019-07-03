@@ -68,8 +68,9 @@ const prevProps: { [id: string]: {} } = {};
 let internalKey = {}; // Private unique value
 let rootState;
 let rootStateChanged = false;
-export const _setTestKey = k => internalKey = k;
+export const _setTestKey = k => internalKey = k; // For lib unit tests
 export let rootAction;
+export let rootTask;
 
 export function component<P = {}, S = {}, A = {}, T = {}>(
     getConfig: GetConfig<P, S, A, T>
@@ -236,6 +237,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
 
     if (isRoot) {
         rootAction = action as GetActionThunk<A>;
+        rootTask = task as GetTaskThunk<T>;
         rootState = state;
     }
 
