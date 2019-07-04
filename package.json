@@ -19,14 +19,13 @@
         "@typescript-eslint/eslint-plugin": "^1.7.0",
         "@typescript-eslint/parser": "^1.7.0",
         "eslint": "^5.16.0",
-        "hyperscript-helpers": "^3.0.3",
         "jest": "^24.8.0",
-        "replace-in-file": "^4.0.0",
-        "snabbdom": "^0.7.3",
         "ts-jest": "^24.0.2",
-        "typescript": "^3.4.5"
+        "typescript": "^3.5.2"
     },
     "dependencies": {
-        "fast-deep-equal": "^2.0.1"
+        "fast-deep-equal": "^2.0.1",
+        "hyperscript-helpers": "^3.0.3",
+        "snabbdom": "^0.7.3"
     }
 }
