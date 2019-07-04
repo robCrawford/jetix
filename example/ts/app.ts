@@ -63,19 +63,14 @@ export default component<Props, State, RootActions, RootTasks>((action, task) =>
     },
 
     view(id, props, state) {
-        return div(`.page.${state.theme}`, [
+        return div(`#${id}.page.${state.theme}`, [
             (() => {
                 switch (state.page) {
-
                     case "aboutPage":
-                        return div('.about-layout', [
-                            aboutPage( "#about-page", { onSetTheme: action("SetTheme") })
-                        ]);
+                        return aboutPage("#about-page", { onSetTheme: action("SetTheme") });
 
                     case "counterPage":
-                        return div('.counter-layout', [
-                            counterPage( "#counter-page", { onSetTheme: action("SetTheme") })
-                        ]);
+                        return counterPage("#counter-page", { onSetTheme: action("SetTheme") });
                 }
             })()
         ]);

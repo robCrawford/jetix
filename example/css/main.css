@@ -12,7 +12,7 @@ html, body {
     margin: 0;
     font: 12px sans-serif;
 }
-.page a {
+a {
     color: #69f;
 }
 .page.default {
@@ -21,21 +21,21 @@ html, body {
 .page.dark {
     background: #444;
 }
-.page .theme-menu {
+#theme-menu {
     margin: 22px -3px;
 }
-.page .intro {
+.intro {
     margin: 20px 0;
     font-size: 14px;
 }
-.page .intro i {
+.intro i {
     color: #888;
     line-height: 24px;
 }
 .page.dark .intro {
     color: #fff;
 }
-.page .counter {
+.counter {
     display: inline-block;
     vertical-align: top;
     text-align: center;
@@ -47,14 +47,14 @@ html, body {
     color: #FFF;
     margin-right: 20px;
 }
-.page .counter button {
+.counter button {
     margin: 5px;
     width: 100px;
 }
 .page.dark .counter {
     background: #0b3257;
 }
-.page .notification {
+.notification {
     display: none;
     background: #EEE;
     color: #444;
@@ -65,10 +65,10 @@ html, body {
     line-height: 14px;
     text-align: center;
 }
-.page .notification.show {
+.notification.show {
     display: block;
 }
-.page .notification button {
+.notification button {
     width: auto;
     display: block;
     padding: 3px 7px 4px;
@@ -82,4 +82,13 @@ html, body {
     background: #444;
     border-color: #444;
     color: #FFF;
+}
+.note {
+    position: fixed;
+    top: 0;
+    right: 0;
+    background: #DDD;
+    padding: 10px 14px;
+    border-bottom-left-radius: 5px;
+    color: #777;
 }

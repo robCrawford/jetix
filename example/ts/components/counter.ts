@@ -86,7 +86,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
 
     // View renders from props & state
     view(id, props, state, rootState) {
-        return div(".counter", [
+        return div(`#${id}.counter`, [
             button(
                 { on: { click: action("Increment", { step: 1 }) } },
                 "+"

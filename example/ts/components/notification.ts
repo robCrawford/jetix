@@ -33,7 +33,7 @@ export default component<Props, State, Actions>(action => ({
     },
 
     view(id, props, state) {
-        return div(".notification", {
+        return div(`#${id}.notification`, {
             class: {
                 show: state.show && props.text.length
             }
