@@ -1,9 +1,6 @@
-/*
-  Lines marked `@devBuild` should be removed for production
-*/
 import { patch, setHook, VNode } from "./vdom";
 export { html } from "./vdom";
-import { log } from "./jetixDev"; // @devBuild
+import { log } from "./jetixLog";
 import equal from 'fast-deep-equal';
 
 type ValueOf<T> = T[keyof T];
@@ -119,9 +116,9 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
                 // This enables currying e.g. when passing an action from parent to child via props
                 action(actionName, thunkInput as ValueOf<A>);
             }
-            else { // @devBuild
-                log.manualError(id, String(actionName)); // @devBuild
-            } // @devBuild
+            else {
+                log.manualError(id, String(actionName));
+            }
         };
         actionThunk.type = ThunkType.Action;
         return actionThunk;
@@ -144,9 +141,9 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             else if (thunkInput === internalKey) {
                 return resolve();
             }
-            else { // @devBuild
-                log.manualError(id, String(taskName)); // @devBuild
-            } // @devBuild
+            else {
+                log.manualError(id, String(taskName));
+            }
         };
         taskThunk.type = ThunkType.Task;
         taskThunk.taskName = String(taskName);
@@ -162,7 +159,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         let next;
         const prevState = deepFreeze(state);
         prevProps[id] = props;
-        log.updateStart(id, prevState, String(actionName), data); // @devBuild
+        log.updateStart(id, prevState, String(actionName), data);
 
         ({ state, next } = (config.actions[actionName] as ActionHandler<ValueOf<A>, P, S>)(
             data, props, prevState, rootState
@@ -173,7 +170,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             rootState = state;
             rootStateChanged = stateChanged;
         }
-        log.updateEnd(state); // @devBuild
+        log.updateEnd(state);
         run(next, props, String(actionName));
     }
 
@@ -197,11 +194,11 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             const taskName = (next as TaskThunk).taskName;
             promise
                 .then(n => {
-                    log.taskSuccess(id, String(taskName)); // @devBuild
+                    log.taskSuccess(id, String(taskName));
                     run(n, props, prevTag);
                 })
-                .catch(e => log.taskFailure(id, String(taskName), e)); // @devBuild
-            log.taskPerform(String(taskName)); // @devBuild
+                .catch(e => log.taskFailure(id, String(taskName), e));
+            log.taskPerform(String(taskName));
             render(props); // End of sync chain
         }
     }
@@ -213,15 +210,15 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             if (renderRequired) {
                 patch(componentRoot as VNode, (componentRoot = config.view(id, props, state, rootState)));
                 setRenderRef(componentRoot, id, render);
-                log.render(id, props); // @devBuild
+                log.render(id, props);
                 publish("patch");
                 if (isRoot) {
                     rootStateChanged = false;
                 }
             }
-            else { // @devBuild
-                log.noRender(id); // @devBuild
-            } // @devBuild
+            else {
+                log.noRender(id);
+            }
         }
         return componentRoot;
     }
@@ -231,9 +228,9 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         run(config.init, props);
         noRender--;
     }
-    else { // @devBuild
-        log.noInitialAction(id, state); // @devBuild
-    } // @devBuild
+    else {
+        log.noInitialAction(id, state);
+    }
 
     if (isRoot) {
         rootAction = action as GetActionThunk<A>;
@@ -243,7 +240,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
 
     componentRoot = config.view(id, props, state, rootState);
     setRenderRef(componentRoot, id, render);
-    log.render(id, props); // @devBuild
+    log.render(id, props);
     return componentRoot;
 }
 

@@ -3,11 +3,11 @@
 */
 let groupId = '';
 
-const debugEnabled = /[&?]debug/.test(window.location.search);
+const logEnabled = /[&?]debug/.test(window.location.search);
 
 export const log = ({
     noInitialAction(id: string, state: {}) {
-        if (debugEnabled) {
+        if (logEnabled) {
             console.group(`%c#${id}`, "color: #69f");
             if (state) {
                 console.log(`${JSON.stringify(state)}`);
@@ -16,7 +16,7 @@ export const log = ({
         }
     },
     updateStart(id: string, state: {}, label: string, data?: {}) {
-        if (debugEnabled) {
+        if (logEnabled) {
             if (!groupId || groupId !== id) {
                 console.group(`%c#${id}`, "color: #69f");
                 if (state) {
@@ -32,28 +32,28 @@ export const log = ({
         }
     },
     updateEnd(state: {}) {
-        if (debugEnabled && state) {
+        if (logEnabled && state) {
             console.log(`${JSON.stringify(state)}`);
         }
     },
     taskPerform(label: string) {
-        if (debugEnabled) {
+        if (logEnabled) {
             console.log(`%cTask "${label}" perform...`, "color: #dd8");
         }
     },
     taskSuccess(id: string, label: string) {
-        if (debugEnabled) {
+        if (logEnabled) {
             console.log(`%c\n...#${id} task "${label}" success`, "color: #dd8");
         }
     },
     taskFailure(id: string, label: string, err: Error) {
-        if (debugEnabled) {
+        if (logEnabled) {
             console.log(`%c\n...#${id} task "${label}" failure`, "color: #dd8");
             console.error(JSON.stringify(err));
         }
     },
     render(id: string, props: {}) {
-        if (debugEnabled) {
+        if (logEnabled) {
             console.groupEnd();
             let msg = `⟳ Render #${id}`;
             if (props && Object.keys(props).length) {
@@ -64,7 +64,7 @@ export const log = ({
         }
     },
     noRender(id: string) {
-        if (debugEnabled) {
+        if (logEnabled) {
             console.groupEnd();
             let msg = `! No render - #${id} has no changes`;
             console.log(`%c${msg}`, "color: #888");

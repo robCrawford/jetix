@@ -5,8 +5,7 @@
     "main": "dist/jetix.js",
     "types": "dist/jetix.d.ts",
     "scripts": {
-        "build:dev": "tsc",
-        "build:prod": "rm -rf ./temp && mkdir temp && cp ./src/jetix.ts ./temp && cp ./src/vdom.ts ./temp && replace-in-file /.*@devBuild.*/g \"\" ./temp/jetix.ts --isRegex",
+        "build": "tsc",
         "test": "jest"
     },
     "author": "Rob Crawford",
