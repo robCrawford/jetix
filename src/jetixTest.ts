@@ -1,36 +1,42 @@
 /*
   API for unit testing Jetix components
+
+    - Initialise component
+        import counter from "../ts/components/counter";
+        const { config, initialState, runAction, getTask } = initComponent(counter, { start: 0 });
+
+    - Run an action to inspect result `state` and `next` as data
+        const { state, next } = runAction("Increment", { step: 1 });
+
+    - Get a task to invoke `success` and `failure` callbacks
+        const { success, failure } = getTask('ValidateCount', { count: 0 });
+        const { name, data } = success('Test');
 */
 export function initComponent(component, props) {
-
-    const config = component.getConfig(
-        // Return actions and tasks as data instead of thunks
-        (actionName, data) => ({
-            actionName,
-            data
-        }),
-        (taskName, data) => ({
-            taskName,
-            data
-        })
-    );
+    // Initialise component passing in `nextAsData()` instead of `action()` and `task()` functions
+    const config = component.getConfig(nextAsData, nextAsData);
     const initialState = config.state(props);
 
     return {
-        // Output from the fn passed into `component(...)` (the default export of each module)
+        // Output from the callback passed into `component(...)`
         config,
 
         // For comparing state changes
         initialState,
 
-        // Run an action - returns output as data `{ actionName, data }` for testing output expectations
-        runAction(actionName: string, data?: {}, props?: {}, state = initialState) {
-            return config.actions[actionName](data, props, state);
+        // Run an action
+        runAction(name: string, data?: {}) {
+            // Returns any next operations as data
+            return config.actions[name](data, props, initialState);
         },
 
-        // Get task as data for manually testing `success` and `failure` output expectations
-        getTask(taskName: string, data?: {}) {
-            return config.tasks[taskName](data);
+        // Get task for manually testing `success` and `failure` output
+        getTask(name: string, data?: {}) {
+            // Returns task spec
+            return config.tasks[name](data);
         }
     };
 }
+
+// Returns next action/task inputs
+const nextAsData = (name: string, data: {}) => ({ name, data });
