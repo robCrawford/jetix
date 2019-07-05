@@ -41,7 +41,7 @@ type TaskHandler<D> = (data: D) => TaskSpec;
 type TaskResult = any; // Result from the effect promise
 
 type TaskSpec = {
-    perform: () => Promise<TaskResult>;
+    perform: () => Promise<TaskResult> | void;
     success?: (a: TaskResult) => Next;
     failure?: (a: TaskResult) => Next;
 };
@@ -131,7 +131,9 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         const resolve = () => {
             const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
             const promise = perform();
-            return promise.then(success).catch(failure);
+            if (promise && promise.then) {
+                return promise.then(success).catch(failure);
+            }
         };
         const taskThunk = (thunkInput: {}) => {
             if (isDomEvent(thunkInput)) {
@@ -190,15 +192,18 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             render(props);
         }
         else if ((next as TaskThunk).type === ThunkType.Task) {
-            const promise = (next as TaskThunk)(internalKey);
+            const result = (next as TaskThunk)(internalKey);
             const taskName = (next as TaskThunk).taskName;
-            promise
-                .then(n => {
-                    log.taskSuccess(id, String(taskName));
-                    run(n, props, prevTag);
-                })
-                .catch(e => log.taskFailure(id, String(taskName), e));
-            log.taskPerform(String(taskName));
+            const isPromise = Boolean(result && result.then);
+            if (isPromise) {
+                result
+                    .then(n => {
+                        log.taskSuccess(id, String(taskName));
+                        run(n, props, prevTag);
+                    })
+                    .catch(e => log.taskFailure(id, String(taskName), e));
+            }
+            log.taskPerform(String(taskName), isPromise);
             render(props); // End of sync chain
         }
     }

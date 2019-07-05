@@ -36,9 +36,9 @@ export const log = ({
             console.log(`${JSON.stringify(state)}`);
         }
     },
-    taskPerform(label: string) {
+    taskPerform(label: string, isPromise: boolean) {
         if (logEnabled) {
-            console.log(`%cTask "${label}" perform...`, "color: #dd8");
+            console.log(`%cTask "${label}" perform${isPromise ? '...': 'ed'}`, "color: #dd8");
         }
     },
     taskSuccess(id: string, label: string) {

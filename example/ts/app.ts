@@ -56,7 +56,9 @@ export default component<Props, State, RootActions, RootTasks>((action, task) =>
     tasks: {
         // Demonstrates a task that is only an effect
         SetDocTitle: ({ title }) => ({
-            perform: async () => document.title = title
+            perform: () => {
+                document.title = title;
+            }
         })
     },
 

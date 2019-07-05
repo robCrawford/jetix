@@ -91,11 +91,11 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
         }
     },
 
-    // Task handlers provide callbacks for async operations that may fail
+    // Task handlers provide callbacks for effects and async operations that may fail
     tasks: {
         ValidateCount: ({ count }) => {
             return {
-                perform: async () => validateCount(count),
+                perform: () => validateCount(count),
                 success: (text: string) => action("SetFeedback", { text }),
                 failure: () => action("SetFeedback", { text: "Unavailable" })
             };
