@@ -1,4 +1,4 @@
-import { component, html, rootTask } from "../../../src/jetix";
+import { component, html, rootTask } from "jetix";
 import themeMenu from "../components/themeMenu";
 const { div, h1, a } = html;
 

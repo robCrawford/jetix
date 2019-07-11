@@ -1,4 +1,4 @@
-import { component, rootAction, html } from "../../../src/jetix";
+import { component, rootAction, html } from "jetix";
 const { div, button } = html;
 
 

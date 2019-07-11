@@ -16,7 +16,7 @@ See a [single page app example](http://robcrawford.github.io/demos/jetix/?debug)
 ## Example
 
 ```JavaScript
-import { component, html } from "../../../src/jetix";
+import { component, html } from "jetix";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
 const { div, button } = html;

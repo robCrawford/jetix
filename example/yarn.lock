@@ -3222,6 +3222,11 @@ https-browserify@^1.0.0:
   resolved "https://registry.yarnpkg.com/https-browserify/-/https-browserify-1.0.0.tgz#ec06c10e0a34c0f2faf199f7fd7fc78fffd03c73"
   integrity sha1-7AbBDgo0wPL68Zn3/X/Hj//QPHM=
 
+hyperscript-helpers@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/hyperscript-helpers/-/hyperscript-helpers-3.0.3.tgz#583ac45214c9ea810991feb97bdb37fc3d12a1e8"
+  integrity sha1-WDrEUhTJ6oEJkf65e9s3/D0Soeg=
+
 iconv-lite@0.4.24, iconv-lite@^0.4.24, iconv-lite@^0.4.4:
   version "0.4.24"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.24.tgz#2022b4b25fbddc21d2f524974a474aafe733908b"
@@ -4009,6 +4014,15 @@ jest@^24.8.0:
   dependencies:
     import-local "^2.0.0"
     jest-cli "^24.8.0"
+
+jetix@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/jetix/-/jetix-0.1.0.tgz#ee0b3e1974a18cbcd6fd00e870223a3c05c06a93"
+  integrity sha512-58bdo3vU0r3vWoTaWw9/76EGvNV0fRuZ0oMMC9/ZXoW7BgMlC4MQkMMVqqnfErwa9SK3WJSqK/HXkBSMDuuZ8A==
+  dependencies:
+    fast-deep-equal "^2.0.1"
+    hyperscript-helpers "^3.0.3"
+    snabbdom "^0.7.3"
 
 js-beautify@^1.8.9:
   version "1.10.0"
@@ -6138,6 +6152,11 @@ slice-ansi@^2.1.0:
     ansi-styles "^3.2.0"
     astral-regex "^1.0.0"
     is-fullwidth-code-point "^2.0.0"
+
+snabbdom@^0.7.3:
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/snabbdom/-/snabbdom-0.7.3.tgz#27b29b41228779ae5d99696a07edaaff4912fc54"
+  integrity sha512-XNh90GQiV36hWdfSL46fIVrSSvmBuZlWk3++qaEgBeQWQJCqTphcbjTODPv8/vyZHJaB3VhePsWfGxi/zBxXyw==
 
 snapdragon-node@^2.0.1:
   version "2.1.1"

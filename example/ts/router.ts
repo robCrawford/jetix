@@ -1,4 +1,4 @@
-import { mount, subscribe, RunAction } from "../../src/jetix";
+import { mount, subscribe, RunAction } from "jetix";
 import Navigo from "navigo";
 import app, { RootActions } from "./app";
 
