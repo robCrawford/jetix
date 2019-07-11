@@ -13,7 +13,8 @@ See a [single page app example](http://robcrawford.github.io/demos/jetix/?debug)
 
 ------------------------
 
-## Example
+## Example 1
+*Counter component [(from SPA src)](https://github.com/robCrawford/jetix/tree/master/example)*
 
 ```JavaScript
 import { component, html } from "jetix";
@@ -123,4 +124,69 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     }
 
 }));
+```
+
+------------------------
+
+## Example 2
+*Hello World!*
+
+```JavaScript
+import { component, html, mount } from "jetix";
+const { div } = html;
+
+type Props = {};
+
+type State = {
+    message: string;
+};
+
+type Actions = {
+    UpdateMessage: { message: string };
+};
+
+type Tasks = {
+    SetDocTitle: { title: string };
+}
+
+const app = component<Props, State, Actions, Tasks>((action, task) => ({
+
+    state: () => ({ message: "" }),
+
+    init: action(
+        "UpdateMessage",
+        { message: "Hello World!" }
+    ),
+
+    actions: {
+        UpdateMessage: ({ message }, props, state) => {
+            return {
+                state: {
+                    ...state,
+                    message
+                },
+                next: task("SetDocTitle", { title: message })
+            };
+        }
+    },
+
+    tasks: {
+        SetDocTitle: ({ title }) => ({
+            perform: () => {
+                document.title = title;
+            }
+        })
+    },
+
+    view(id, props, state) {
+        return div(`#${id}-message`, state.message);
+    }
+
+}));
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => mount({ app, props: {} })
+);
 ```
