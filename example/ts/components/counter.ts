@@ -78,8 +78,12 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
         ValidateCount: ({ count }) => {
             return {
                 perform: () => validateCount(count),
-                success: (text: string) => action("SetFeedback", { text }),
-                failure: () => action("SetFeedback", { text: "Unavailable" })
+                success: (result: { text: string }, props, state) => {
+                    return action("SetFeedback", result);
+                },
+                failure: (err, props, state) => {
+                    return action("SetFeedback", { text: "Unavailable" });
+                }
             };
         }
     },

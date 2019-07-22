@@ -36,21 +36,19 @@ export type ActionHandler<D, P, S> = (
     rootState: {}
 ) => { state: S; next?: Next };
 
-type TaskHandler<D> = (data: D) => TaskSpec;
+type TaskHandler<D, P, S> = (data: D) => TaskSpec<P, S>;
 
-type TaskResult = any; // Result from the effect promise
-
-type TaskSpec = {
-    perform: () => Promise<TaskResult> | void;
-    success?: (a: TaskResult) => Next;
-    failure?: (a: TaskResult) => Next;
+type TaskSpec<P, S> = {
+    perform: () => Promise<{}> | void;
+    success?: (result: {}, props: P, state: S) => Next;
+    failure?: (error: {}, props: P, state: S) => Next;
 };
 
 export type Config<P, S, A, T> = {
     state?: (props: P) => S;
     init?: Next;
     actions?: {[K in keyof A]: ActionHandler<A[K], P, S>};
-    tasks?: {[K in keyof T]: TaskHandler<T[K]>};
+    tasks?: {[K in keyof T]: TaskHandler<T[K], P, S>};
     view: (id: string, props: P, state: S, rootState: {}) => VNode;
 };
 
@@ -129,10 +127,12 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             throw Error(`tasks ${String(config.tasks)}`);
         }
         const resolve = () => {
-            const { perform, success, failure }: TaskSpec = config.tasks[taskName](data);
+            const { perform, success, failure }: TaskSpec<P, S> = config.tasks[taskName](data);
             const promise = perform();
             if (promise && promise.then) {
-                return promise.then(success).catch(failure);
+                return promise
+                    .then(result => success(result, props, state))
+                    .catch(err => failure(err, props, state));
             }
         };
         const taskThunk = (thunkInput: {}) => {
