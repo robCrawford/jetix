@@ -97,15 +97,19 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
         ValidateCount: ({ count }) => {
             return {
                 perform: () => validateCount(count),
-                success: (text: string) => action("SetFeedback", { text }),
-                failure: () => action("SetFeedback", { text: "Unavailable" })
+                success: (result: { text: string }, props, state) => {
+                    return action("SetFeedback", result);
+                },
+                failure: (err, props, state) => {
+                    return action("SetFeedback", { text: "Unavailable" });
+                }
             };
         }
     },
 
     // View renders from props & state
     view(id, props, state, rootState) {
-        return div(".counter", [
+        return div(`#${id}.counter`, [
             button(
                 { on: { click: action("Increment", { step: 1 }) } },
                 "+"
