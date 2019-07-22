@@ -4,9 +4,9 @@ import aboutPage from "./pages/aboutPage";
 import "./router";
 const { div } = html;
 
-type Props = {};
+export type RootProps = {};
 
-export type State = {
+export type RootState = {
     theme: Theme;
     page?: Page;
 };
@@ -25,7 +25,7 @@ export type Page = "counterPage" | "aboutPage";
 export type Theme = "default" | "dark";
 
 
-export default component<Props, State, RootActions, RootTasks>((action, task) => ({
+export default component<RootProps, RootState, RootActions, RootTasks>((action, task) => ({
 
     state: () => ({
         theme: "default",

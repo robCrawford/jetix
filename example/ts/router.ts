@@ -1,11 +1,11 @@
 import { mount, subscribe, RunAction } from "jetix";
 import Navigo from "navigo";
-import app, { RootActions } from "./app";
+import app, { RootActions, RootProps } from "./app";
 
 const router = new Navigo();
 
 
-document.addEventListener("DOMContentLoaded", () => mount({
+document.addEventListener("DOMContentLoaded", () => mount<RootActions, RootProps>({
     app,
     props: {},
 

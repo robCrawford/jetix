@@ -249,10 +249,10 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     return componentRoot;
 }
 
-export function mount<T, P>({ app, props, init }: {
+export function mount<A, P>({ app, props, init }: {
     app: (idStr: string, props?: P) => VNode;
     props: P;
-    init?: (runRootAction: RunAction<T>) => void;
+    init?: (runRootAction: RunAction<A>) => void;
 }): void {
     // Mount the top-level app component
     patch(
@@ -262,7 +262,7 @@ export function mount<T, P>({ app, props, init }: {
     // Manually invoking an action without `internalKey` is an error, so `runRootAction`
     // is provided by `mount` for wiring up events to root actions (e.g. routing)
     if (init) {
-        const runRootAction: RunAction<T> = (actionName, data) => {
+        const runRootAction: RunAction<A> = (actionName, data) => {
             rootAction(actionName, data)(internalKey);
         };
         init(runRootAction);
