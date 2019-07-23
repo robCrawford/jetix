@@ -1,4 +1,4 @@
-import { component, html } from "jetix";
+import { component, html } from "../../src/jetix";
 import counterPage from "./pages/counterPage";
 import aboutPage from "./pages/aboutPage";
 import "./router";

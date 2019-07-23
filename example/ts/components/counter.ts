@@ -1,4 +1,4 @@
-import { component, html } from "jetix";
+import { component, html } from "../../../src/jetix";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
 const { div, button } = html;

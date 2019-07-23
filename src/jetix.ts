@@ -20,7 +20,7 @@ export type GetActionThunk<A> = <K extends keyof A>(actionName: K, data?: A[K]) 
 export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
 export type TaskThunk = {
-    (data: {}): Promise<Next>;
+    (data: {}): Promise<Next> | void;
     type: ThunkType;
     taskName: string;
 };
@@ -126,7 +126,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         if (!config.tasks) {
             throw Error(`tasks ${String(config.tasks)}`);
         }
-        const resolve = () => {
+        const performTask = (): Promise<Next> | void => {
             const { perform, success, failure }: TaskSpec<P, S> = config.tasks[taskName](data);
             const promise = perform();
             if (promise && promise.then) {
@@ -138,10 +138,13 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         const taskThunk = (thunkInput: {}) => {
             if (isDomEvent(thunkInput)) {
                 // Invoked from the DOM, `thunkInput` is the (unused) event
-                resolve();
+                const promise = performTask();
+                if (promise && promise.then) {
+                    promise.then((next: Next) => run(next, props));
+                }
             }
             else if (thunkInput === internalKey) {
-                return resolve();
+                return performTask();
             }
             else {
                 log.manualError(id, String(taskName));
@@ -196,7 +199,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             const taskName = (next as TaskThunk).taskName;
             const isPromise = Boolean(result && result.then);
             if (isPromise) {
-                result
+                (result as Promise<Next>)
                     .then(n => {
                         log.taskSuccess(id, String(taskName));
                         run(n, props, prevTag);
@@ -269,7 +272,7 @@ export function mount<A, P>({ app, props, init }: {
     }
 }
 
-function isDomEvent(e: any): boolean {
+function isDomEvent(e: {}): boolean {
     return e && "eventPhase" in e;
 }
 
