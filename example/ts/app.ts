@@ -34,7 +34,7 @@ export default component<RootProps, RootState, RootActions, RootTasks>((action, 
 
     // Root actions, import into any component
     actions: {
-        SetPage: ({ page }, props, state) => {
+        SetPage: ({ page }, { state }) => {
             return {
                 state: {
                     ...state,
@@ -42,7 +42,7 @@ export default component<RootProps, RootState, RootActions, RootTasks>((action, 
                 }
             };
         },
-        SetTheme: ({ theme }, props, state) => {
+        SetTheme: ({ theme }, { state }) => {
             return {
                 state: {
                     ...state,
@@ -62,7 +62,7 @@ export default component<RootProps, RootState, RootActions, RootTasks>((action, 
         })
     },
 
-    view(id, props, state) {
+    view(id, { state }) {
         return div(`#${id}.page.${state.theme}`, [
             (() => {
                 switch (state.page) {

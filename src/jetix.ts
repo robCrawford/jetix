@@ -29,19 +29,23 @@ export type GetTaskThunk<T> = (taskName: keyof T, data?: ValueOf<T>) => TaskThun
 
 type Next = ActionThunk | TaskThunk | (ActionThunk | TaskThunk)[];
 
+type Context<P, S> = {
+    props: P;
+    state: S;
+    rootState: {};
+};
+
 export type ActionHandler<D, P, S> = (
     data: D,
-    props: P,
-    state: S,
-    rootState: {}
+    ctx: Context<P, S>
 ) => { state: S; next?: Next };
 
 type TaskHandler<D, P, S> = (data: D) => TaskSpec<P, S>;
 
 type TaskSpec<P, S> = {
     perform: () => Promise<{}> | void;
-    success?: (result: {}, props: P, state: S) => Next;
-    failure?: (error: {}, props: P, state: S) => Next;
+    success?: (result: {}, ctx: Context<P, S>) => Next;
+    failure?: (error: {}, ctx: Context<P, S>) => Next;
 };
 
 export type Config<P, S, A, T> = {
@@ -49,7 +53,7 @@ export type Config<P, S, A, T> = {
     init?: Next;
     actions?: {[K in keyof A]: ActionHandler<A[K], P, S>};
     tasks?: {[K in keyof T]: TaskHandler<T[K], P, S>};
-    view: (id: string, props: P, state: S, rootState: {}) => VNode;
+    view: (id: string, ctx: Context<P, S>) => VNode;
 };
 
 export type GetConfig<P, S, A, T> =
@@ -131,8 +135,8 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             const promise = perform();
             if (promise && promise.then) {
                 return promise
-                    .then(result => success(result, props, state))
-                    .catch(err => failure(err, props, state));
+                    .then(result => success(result, { props, state, rootState }))
+                    .catch(err => failure(err, { props, state, rootState }));
             }
         };
         const taskThunk = (thunkInput: {}) => {
@@ -167,7 +171,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         log.updateStart(id, prevState, String(actionName), data);
 
         ({ state, next } = (config.actions[actionName] as ActionHandler<ValueOf<A>, P, S>)(
-            data, props, prevState, rootState
+            data, { props, state: prevState, rootState }
         ));
         // Action handlers return existing state by ref if no changes
         stateChanged = prevState !== state;
@@ -216,7 +220,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             // `state` is same ref when unchanged but `props` is always a new object so deep compare
             const renderRequired = stateChanged || rootStateChanged || !equal(prevProps[id], props);
             if (renderRequired) {
-                patch(componentRoot as VNode, (componentRoot = config.view(id, props, state, rootState)));
+                patch(componentRoot as VNode, (componentRoot = config.view(id, { props, state, rootState })));
                 setRenderRef(componentRoot, id, render);
                 log.render(id, props);
                 publish("patch");
@@ -246,7 +250,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         rootState = state;
     }
 
-    componentRoot = config.view(id, props, state, rootState);
+    componentRoot = config.view(id, { props, state, rootState });
     setRenderRef(componentRoot, id, render);
     log.render(id, props);
     return componentRoot;

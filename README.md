@@ -55,7 +55,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
 
     // Action handlers return new state, and any next actions/tasks
     actions: {
-        Increment: ({ step }, props, state, rootState) => {
+        Increment: ({ step }, { props, state, rootState }) => {
             return {
                 state: {
                     ...state,
@@ -64,7 +64,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 next: action("Validate")
             };
         },
-        Decrement: ({ step }, props, state, rootState) => {
+        Decrement: ({ step }, { props, state, rootState }) => {
             return {
                 state: {
                     ...state,
@@ -73,7 +73,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 next: action("Validate")
             };
         },
-        Validate: (_, props, state, rootState) => {
+        Validate: (_, { props, state, rootState }) => {
             return {
                 state,
                 next: [
@@ -82,7 +82,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                     task("ValidateCount", { count: state.counter })
                 ]};
         },
-        SetFeedback: ({ text }, props, state, rootState) => {
+        SetFeedback: ({ text }, { props, state, rootState }) => {
             return {
                 state: {
                     ...state,
@@ -97,10 +97,10 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
         ValidateCount: ({ count }) => {
             return {
                 perform: () => validateCount(count),
-                success: (result: { text: string }, props, state) => {
+                success: (result: { text: string }, { props, state, rootState }) => {
                     return action("SetFeedback", result);
                 },
-                failure: (err, props, state) => {
+                failure: (err, { props, state, rootState }) => {
                     return action("SetFeedback", { text: "Unavailable" });
                 }
             };
@@ -108,7 +108,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     },
 
     // View renders from props & state
-    view(id, props, state, rootState) {
+    view(id, { props, state, rootState }) {
         return div(`#${id}.counter`, [
             button(
                 { on: { click: action("Increment", { step: 1 }) } },
@@ -163,7 +163,7 @@ const app = component<Props, State, Actions, Tasks>((action, task) => ({
     ),
 
     actions: {
-        UpdateMessage: ({ message }, props, state) => {
+        UpdateMessage: ({ message }, { props, state }) => {
             return {
                 state: {
                     ...state,
@@ -187,7 +187,6 @@ const app = component<Props, State, Actions, Tasks>((action, task) => ({
     }
 
 }));
-
 
 document.addEventListener(
     "DOMContentLoaded",

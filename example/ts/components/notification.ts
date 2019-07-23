@@ -21,7 +21,7 @@ export default component<Props, State, Actions>(action => ({
     }),
 
     actions: {
-        Dismiss: (_, props, state) => {
+        Dismiss: (_, { props, state }) => {
             return {
                 state: {
                     ...state,
@@ -32,7 +32,7 @@ export default component<Props, State, Actions>(action => ({
         }
     },
 
-    view(id, props, state) {
+    view(id, { props, state }) {
         return div(`#${id}.notification`, {
             class: {
                 show: state.show && props.text.length
