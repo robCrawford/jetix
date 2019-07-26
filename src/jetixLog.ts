@@ -6,7 +6,7 @@ let groupId = '';
 const logEnabled = /[&?]debug/.test(window.location.search);
 
 export const log = ({
-    noInitialAction(id: string, state: {}) {
+    noInitialAction(id: string, state: {}): void {
         if (logEnabled) {
             console.group(`%c#${id}`, "color: #69f");
             if (state) {
@@ -15,7 +15,7 @@ export const log = ({
             groupId = id;
         }
     },
-    updateStart(id: string, state: {}, label: string, data?: {}) {
+    updateStart(id: string, state: {}, label: string, data?: {}): void {
         if (logEnabled) {
             if (!groupId || groupId !== id) {
                 console.group(`%c#${id}`, "color: #69f");
@@ -31,28 +31,28 @@ export const log = ({
             console.log(`%c${msg}`, "color: #f6b");
         }
     },
-    updateEnd(state: {}) {
+    updateEnd(state: {}): void {
         if (logEnabled && state) {
             console.log(`${JSON.stringify(state)}`);
         }
     },
-    taskPerform(label: string, isPromise: boolean) {
+    taskPerform(label: string, isPromise: boolean): void {
         if (logEnabled) {
             console.log(`%cTask "${label}" perform${isPromise ? '...': 'ed'}`, "color: #dd8");
         }
     },
-    taskSuccess(id: string, label: string) {
+    taskSuccess(id: string, label: string): void {
         if (logEnabled) {
             console.log(`%c\n...#${id} task "${label}" success`, "color: #dd8");
         }
     },
-    taskFailure(id: string, label: string, err: Error) {
+    taskFailure(id: string, label: string, err: Error): void {
         if (logEnabled) {
             console.log(`%c\n...#${id} task "${label}" failure`, "color: #dd8");
             console.error(JSON.stringify(err));
         }
     },
-    render(id: string, props: {}) {
+    render(id: string, props: {}): void {
         if (logEnabled) {
             console.groupEnd();
             let msg = `⟳ Render #${id}`;
@@ -63,7 +63,7 @@ export const log = ({
             groupId = '';
         }
     },
-    noRender(id: string) {
+    noRender(id: string): void {
         if (logEnabled) {
             console.groupEnd();
             let msg = `! No render - #${id} has no changes`;
@@ -71,13 +71,13 @@ export const log = ({
             groupId = '';
         }
     },
-    manualError(id: string, name: string) {
+    manualError(id: string, name: string): void {
         console.error(`Error: #${id} "${name}" cannot be invoked manually`);
     }
 });
 
-window.addEventListener('error', () => {
-    setTimeout(() => {
+window.addEventListener('error', (): void => {
+    setTimeout((): void => {
         console.groupEnd();
         groupId = '';
     });

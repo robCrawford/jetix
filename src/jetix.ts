@@ -27,7 +27,7 @@ export type TaskThunk = {
 
 export type GetTaskThunk<T> = (taskName: keyof T, data?: ValueOf<T>) => TaskThunk;
 
-type Next = ActionThunk | TaskThunk | (ActionThunk | TaskThunk)[];
+export type Next = ActionThunk | TaskThunk | (ActionThunk | TaskThunk)[];
 
 type Context<P, S> = {
     props: P;
@@ -42,7 +42,7 @@ export type ActionHandler<D, P, S> = (
 
 type TaskHandler<D, P, S> = (data: D) => TaskSpec<P, S>;
 
-type TaskSpec<P, S> = {
+export type TaskSpec<P, S> = {
     perform: () => Promise<{}> | void;
     success?: (result: {}, ctx: Context<P, S>) => Next;
     failure?: (error: {}, ctx: Context<P, S>) => Next;
@@ -67,13 +67,16 @@ const prevProps: { [id: string]: {} } = {};
 let internalKey = {}; // Private unique value
 let rootState;
 let rootStateChanged = false;
-export const _setTestKey = k => internalKey = k; // For lib unit tests
+
+export const _setTestKey = (k: {}): void => {
+    internalKey = k; // For lib unit tests
+};
 export let rootAction;
 export let rootTask;
 
 export function component<P = {}, S = {}, A = {}, T = {}>(
     getConfig: GetConfig<P, S, A, T>
-) {
+): (idStr: string, props?: P) => VNode {
     // Pass in callback that returns component config
     // Returns render function that is called by parent e.g. `counter("counter-0", { start: 0 })`
     const renderFn = (idStr: string, props?: P): VNode => {
@@ -132,19 +135,19 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         }
         const performTask = (): Promise<Next> | void => {
             const { perform, success, failure }: TaskSpec<P, S> = config.tasks[taskName](data);
-            const promise = perform();
-            if (promise && promise.then) {
-                return promise
-                    .then(result => success(result, { props, state, rootState }))
-                    .catch(err => failure(err, { props, state, rootState }));
+            const output = perform();
+            if (output && output.then) {
+                return output
+                    .then((result: {}): Next => success(result, { props, state, rootState }))
+                    .catch((err: {}): Next => failure(err, { props, state, rootState }));
             }
         };
-        const taskThunk = (thunkInput: {}) => {
+        const taskThunk = (thunkInput: {}): Promise<Next> | void => {
             if (isDomEvent(thunkInput)) {
                 // Invoked from the DOM, `thunkInput` is the (unused) event
                 const promise = performTask();
                 if (promise && promise.then) {
-                    promise.then((next: Next) => run(next, props));
+                    promise.then((next: Next): void => run(next, props));
                 }
             }
             else if (thunkInput === internalKey) {
@@ -165,7 +168,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     let stateChanged = false;
 
     function update(actionName: keyof A, data?: ValueOf<A>): void {
-        let next;
+        let next: Next;
         const prevState = deepFreeze(state);
         prevProps[id] = props;
         log.updateStart(id, prevState, String(actionName), data);
@@ -194,7 +197,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
         }
         else if (Array.isArray(next)) {
             noRender++;
-            next.forEach(n => run(n, props, prevTag));
+            next.forEach((n: Next): void => run(n, props, prevTag));
             noRender--;
             render(props);
         }
@@ -204,18 +207,18 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
             const isPromise = Boolean(result && result.then);
             if (isPromise) {
                 (result as Promise<Next>)
-                    .then(n => {
+                    .then((n: Next): void => {
                         log.taskSuccess(id, String(taskName));
                         run(n, props, prevTag);
                     })
-                    .catch(e => log.taskFailure(id, String(taskName), e));
+                    .catch((e: Error): void => log.taskFailure(id, String(taskName), e));
             }
             log.taskPerform(String(taskName), isPromise);
             render(props); // End of sync chain
         }
     }
 
-    const render: RenderFn<P> = (props: P) => {
+    const render: RenderFn<P> = (props: P): VNode | void => {
         if (!noRender) {
             // `state` is same ref when unchanged but `props` is always a new object so deep compare
             const renderRequired = stateChanged || rootStateChanged || !equal(prevProps[id], props);
@@ -269,7 +272,7 @@ export function mount<A, P>({ app, props, init }: {
     // Manually invoking an action without `internalKey` is an error, so `runRootAction`
     // is provided by `mount` for wiring up events to root actions (e.g. routing)
     if (init) {
-        const runRootAction: RunAction<A> = (actionName, data) => {
+        const runRootAction: RunAction<A> = (actionName, data): void => {
             rootAction(actionName, data)(internalKey);
         };
         init(runRootAction);
@@ -289,9 +292,9 @@ function renderById(id: string, props: {}): VNode | void {
 
 function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
     // Run after all synchronous patches
-    setTimeout(() => {
+    setTimeout((): void => {
         renderRefs[id] = render;
-        setHook(vnode, "destroy", () => {
+        setHook(vnode, "destroy", (): void => {
             delete renderRefs[id];
             delete prevProps[id];
         });
@@ -301,7 +304,7 @@ function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
 function deepFreeze<T>(o: T): T {
     if (o) {
         Object.freeze(o);
-        Object.getOwnPropertyNames(o).forEach((p: string) => {
+        Object.getOwnPropertyNames(o).forEach((p: string): void => {
             if (
                 o.hasOwnProperty(p) &&
                 o[p] !== null &&
@@ -316,12 +319,12 @@ function deepFreeze<T>(o: T): T {
 }
 
 // Pub/sub
-export function subscribe(type: string, listener: EventListener) {
+export function subscribe(type: string, listener: EventListener): void {
     document.addEventListener(type, listener);
 }
-export function unsubscribe(type: string, listener: EventListener) {
+export function unsubscribe(type: string, listener: EventListener): void {
     document.removeEventListener(type, listener);
 }
-export function publish(type: string, detail?: any) {
+export function publish(type: string, detail?: {}): void {
     document.dispatchEvent(new CustomEvent(type, detail ? { detail } : null));
 }
