@@ -72,7 +72,7 @@ export const log = ({
         }
     },
     manualError(id: string, name: string): void {
-        console.error(`Error: #${id} "${name}" cannot be invoked manually`);
+        throw Error(`#${id} "${name}" cannot be invoked manually`);
     }
 });
 

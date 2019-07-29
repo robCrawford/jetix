@@ -1,7 +1,25 @@
-import { renderComponent, _setTestKey } from "../src/jetix";
+import { renderComponent, _setTestKey, rootAction, component, html, rootTask } from "../src/jetix";
 import * as vdom from "../src/vdom";
+const { div } = html;
 
 const testKey = _setTestKey({});
+
+const app = component((action, task) => ({
+    state: () => ({ str: "" }),
+    actions: {
+        TestAction: ({ str }, { state }) => {
+            return { state: { ...state, str } };
+        }
+    },
+    tasks: {
+        TestTask: () => ({
+            perform: () => {}
+        })
+    },
+    view(id, { state }) {
+        return div(`#${id}`, "test");
+    }
+}))("app"); // This id is usually set by `mount`, allows `rootAction`/`rootTask`
 
 describe("Jetix", function() {
     let patchCount, state, action;
@@ -310,6 +328,26 @@ describe("Jetix", function() {
             };
         });
     }
+
+    it("should throw when an action is called manually", () => {
+        const a = rootAction("TestAction", {str: ""});
+        expect(() => a()).toThrow();
+    });
+
+    it("should allow action calls with a DOM event input", () => {
+        const a = rootAction("TestAction", {str: ""});
+        expect(() => a({eventPhase: 1})).not.toThrow();
+    });
+
+    it("should throw when a task is called manually", () => {
+        const a = rootTask("TestTask");
+        expect(() => a()).toThrow();
+    });
+
+    it("should allow task calls with a DOM event input", () => {
+        const a = rootTask("TestTask");
+        expect(() => a({eventPhase: 1})).not.toThrow();
+    });
 
     function getMixedActionsIncr(numTestActions) {
         const array1Incr = numTestActions;
