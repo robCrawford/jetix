@@ -8,7 +8,7 @@ describe("Jetix", function() {
     let componentId = 0;
     const getId = () => `_${componentId++}`;
 
-    function view(id, props, curState) {
+    function view(id, { props, state: curState }) {
         state = curState;
         return {} as vdom.VNode;
     }
@@ -29,14 +29,14 @@ describe("Jetix", function() {
 
             for (let i = 1; i < numTestActions; i++) {
                 actions["Increment" + i] =
-                    (_, props, state) => {
+                    (_, { props, state }) => {
                         return {
                             state: { ...state, count: state.count + 1 }, next: action("Increment" + (i+1))
                         };
                     };
             }
             actions["Increment" + numTestActions] =
-                (_, props, state) => {
+                (_, { props, state }) => {
                     return {
                         state: { ...state, count: state.count + 1 }
                     };
@@ -66,7 +66,7 @@ describe("Jetix", function() {
 
             for (let i = 1; i <= numTestActions; i++) {
                 actions["Increment" + i] =
-                    (_, props, state) => {
+                    (_, { props, state }) => {
                         return {
                             state: { ...state, count: state.count + 1 }
                         };
@@ -74,7 +74,7 @@ describe("Jetix", function() {
                 incrementRetActions.push(action("Increment" + i));
             }
             actions["Increment"] =
-                (_, props, state) => ({ state, next: incrementRetActions });
+                (_, { props, state }) => ({ state, next: incrementRetActions });
 
             return {
                 state: () => ({ count: 0 }),
@@ -110,7 +110,7 @@ describe("Jetix", function() {
 
             for (let i = 1; i < numTestActions; i++) {
                 actions["Increment" + i] =
-                    (_, props, state) => {
+                    (_, { props, state }) => {
                         return {
                             state: { ...state, count: state.count + 1 },
                             next: action("Increment" + (i+1))
@@ -118,7 +118,7 @@ describe("Jetix", function() {
                     };
             }
             actions["Increment" + numTestActions] =
-                (_, props, state) => {
+                (_, { props, state }) => {
                     const newState = { ...state, count: state.count + 1 };
                     setTimeout(() => {
                         // After last action has been processed
@@ -135,7 +135,7 @@ describe("Jetix", function() {
             // Overwrite middle action with task
             const midIndex = numTestActions/2;
             actions["Increment" + midIndex] =
-                (_, props, state) => {
+                (_, { props, state }) => {
                     return {
                         state: { ...state, count: state.count + 1 },
                         next: task("TestAsync")
@@ -167,18 +167,18 @@ describe("Jetix", function() {
             return {
                 state: () => ({ count: 0 }),
                 actions: {
-                    Increment1: (_, props, state) => {
+                    Increment1: (_, { props, state }) => {
                         return {
                             state: { ...state, count: state.count + 1 },
                             next: task("TestAsync")
                         };
                     },
-                    Increment2: (_, props, state) => {
+                    Increment2: (_, { props, state }) => {
                         return {
                             state: { ...state, count: state.count + 1 }
                         };
                     },
-                    Increment3: (_, props, state) => {
+                    Increment3: (_, { props, state }) => {
                         const newState = { ...state, count: state.count + 1 };
                         setTimeout(() => {
                             // After last action has been processed
@@ -243,7 +243,7 @@ describe("Jetix", function() {
             // Array of single increment actions that return nothing
             for (let i = 1; i <= numTestActions; i++) {
                 actions["IncrementA1-" + i] =
-                    (_, props, state) => {
+                    (_, { props, state }) => {
                         return {
                             state: { ...state, count: state.count + 1 }
                         };
@@ -253,7 +253,7 @@ describe("Jetix", function() {
             // Series of increment actions "IncrementS1-1" - "IncrementS1-19"
             for (let i = 1; i < numTestActions; i++) {
                 actions["IncrementS1-" + i] =
-                    (_, props, state) => {
+                    (_, { props, state }) => {
                         return {
                             state: { ...state, count: state.count + 1 },
                             next: action("IncrementS1-" + (i+1))
@@ -261,7 +261,7 @@ describe("Jetix", function() {
                     };
             }
             actions["IncrementS1-" + numTestActions] =
-                (_, props, state) => {
+                (_, { props, state }) => {
                     // "IncrementS1-20" returns `actionsArray1` array
                     return {
                         state: { ...state, count: state.count + 1 },
@@ -271,7 +271,7 @@ describe("Jetix", function() {
             // Series of increment actions "IncrementS2-1" - "IncrementS2-10"
             for (let i = 1; i < numTestActions/2; i++) {
                 actions["IncrementS2-" + i] =
-                    (_, props, state) => {
+                    (_, { props, state }) => {
                         return {
                             state: { ...state, count: state.count + 1 },
                             next: action("IncrementS2-" + (i+1))
@@ -279,14 +279,14 @@ describe("Jetix", function() {
                     };
             }
             actions["IncrementS2-" + numTestActions/2] =
-                (_, props, state) => {
+                (_, { props, state }) => {
                     return { state: { ...state, count: state.count + 1 } };
                 };
 
             // "IncrementA2-Init" returns `actionsArray2` array
             for (let i = 1; i <= numTestActions; i++) {
                 actions["IncrementA2-" + i] =
-                    (_, props, state) => {
+                    (_, { props, state }) => {
                         // Half return chain "IncrementS1-1" - "IncrementS1-20",
                         // where "IncrementS1-20" returns `actionsArray1`
                         if (i % 2) {
@@ -300,7 +300,7 @@ describe("Jetix", function() {
                 actionsArray2.push(action("IncrementA2-" + i));
             }
             actions["IncrementA2-Init"] =
-                (_, props, state) => ({ state, next: actionsArray2 });
+                (_, { props, state }) => ({ state, next: actionsArray2 });
 
             return {
                 state: () => ({ count: 0 }),

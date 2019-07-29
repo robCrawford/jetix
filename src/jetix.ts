@@ -68,9 +68,7 @@ let internalKey = {}; // Private unique value
 let rootState;
 let rootStateChanged = false;
 
-export const _setTestKey = (k: {}): void => {
-    internalKey = k; // For lib unit tests
-};
+export const _setTestKey = <T>(k: T): T => internalKey = k; // For lib unit tests
 export let rootAction;
 export let rootTask;
 
