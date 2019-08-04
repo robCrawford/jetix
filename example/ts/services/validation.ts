@@ -2,7 +2,7 @@
 export function validateCount(n: number): Promise<{ text: string }> {
     // Mock async
     return new Promise(resolve => {
-        setTimeout(() => resolve({ text: isNegative(n) ? "x Invalid" : "✓ Vaild" }), 500);
+        setTimeout(() => resolve({ text: isNegative(n) ? "x Invalid" : "✓ Valid" }), 500);
     });
 }
 

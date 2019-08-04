@@ -12,11 +12,32 @@
         const { success, failure } = getTask('ValidateCount', { count: 0 });
         const { name, data } = success('Test');
 */
-import { Next, TaskSpec } from "./jetix";
+import { Context } from "./jetix";
 
-export function initComponent(component, props): {} {
-    // Initialise component passing in `nextAsData()` instead of `action()` and `task()` functions
-    const config = component.getConfig(nextAsData, nextAsData);
+type ComponentTestApi = {
+    config: {};
+    initialState: {};
+    runAction: <S>(name: string, data?: {}) => { state: S; next?: NextAsData | NextAsData[] };
+    getTask: (name: string, data?: {}) => TestTaskSpec<{}, {}>;
+};
+
+type NextAsData = {
+    name: string;
+    data?: {};
+};
+
+type TestTaskSpec<P, S> = {
+    perform: () => Promise<{}> | void;
+    success?: (result: {}, ctx: Context<P, S>) => NextAsData | NextAsData[];
+    failure?: (error: {}, ctx: Context<P, S>) => NextAsData | NextAsData[];
+};
+
+// Returns next action/task inputs as data
+const nextToData = (name: string, data?: {}): NextAsData => ({ name, data });
+
+export function initComponent(component, props): ComponentTestApi {
+    // Initialise component passing in `nextToData()` instead of `action()` and `task()` functions
+    const config = component.getConfig(nextToData, nextToData);
     const initialState = config.state(props);
 
     return {
@@ -27,18 +48,15 @@ export function initComponent(component, props): {} {
         initialState,
 
         // Run an action
-        runAction(name: string, data?: {}): Next {
+        runAction<S>(name: string, data?: {}): { state: S; next?: NextAsData } {
             // Returns any next operations as data
-            return config.actions[name](data, props, initialState);
+            return config.actions[name](data, { props, state: initialState });
         },
 
-        // Get task for manually testing `success` and `failure` output
-        getTask(name: string, data?: {}): TaskSpec<{}, {}> {
+        // Get task spec for manually testing `success` and `failure` output
+        getTask(name: string, data?: {}): TestTaskSpec<{}, {}> {
             // Returns task spec
             return config.tasks[name](data);
         }
     };
 }
-
-// Returns next action/task inputs
-const nextAsData = (name: string, data: {}): {} => ({ name, data });

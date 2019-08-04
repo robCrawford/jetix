@@ -3,11 +3,11 @@ import notification from "./notification";
 import { validateCount } from "../services/validation";
 const { div, button } = html;
 
-type Props = {
+export type Props = {
     readonly start: number;
 };
 
-type State = {
+export type State = {
     counter: number;
     feedback: string;
 };

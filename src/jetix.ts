@@ -29,7 +29,7 @@ export type GetTaskThunk<T> = (taskName: keyof T, data?: ValueOf<T>) => TaskThun
 
 export type Next = ActionThunk | TaskThunk | (ActionThunk | TaskThunk)[];
 
-type Context<P, S> = {
+export type Context<P, S> = {
     props: P;
     state: S;
     rootState: {};

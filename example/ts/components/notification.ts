@@ -1,12 +1,12 @@
 import { ActionThunk, component, html } from "../../../src/jetix";
 const { div, button } = html;
 
-type Props = {
+export type Props = {
     readonly text: string;
     readonly onDismiss: ActionThunk;
 };
 
-type State = {
+export type State = {
     show: boolean;
 };
 
