@@ -1,4 +1,4 @@
-import { component, html } from "../../src/jetix";
+import { component, html, Config, VNode, TaskSpec } from "../../src/jetix";
 import counterPage from "./pages/counterPage";
 import aboutPage from "./pages/aboutPage";
 import "./router";
@@ -12,12 +12,12 @@ export type RootState = {
 };
 
 export type RootActions = {
-    "SetPage": { page: Page };
-    "SetTheme": { theme: Theme };
+    SetPage: { page: Page };
+    SetTheme: { theme: Theme };
 };
 
 export type RootTasks = {
-    "SetDocTitle": { title: string };
+    SetDocTitle: { title: string };
 }
 
 export type Page = "counterPage" | "aboutPage";
@@ -25,16 +25,16 @@ export type Page = "counterPage" | "aboutPage";
 export type Theme = "default" | "dark";
 
 
-export default component<RootProps, RootState, RootActions, RootTasks>((action, task) => ({
+export default component<RootProps, RootState, RootActions, RootTasks>((action, task): Config<RootProps, RootState, RootActions, RootTasks> => ({
 
-    state: () => ({
+    state: (): RootState => ({
         theme: "default",
         page: null
     }),
 
     // Root actions, import into any component
     actions: {
-        SetPage: ({ page }, { state }) => {
+        SetPage: ({ page }, { state }): { state: RootState } => {
             return {
                 state: {
                     ...state,
@@ -42,7 +42,7 @@ export default component<RootProps, RootState, RootActions, RootTasks>((action, 
                 }
             };
         },
-        SetTheme: ({ theme }, { state }) => {
+        SetTheme: ({ theme }, { state }): { state: RootState } => {
             return {
                 state: {
                     ...state,
@@ -55,16 +55,16 @@ export default component<RootProps, RootState, RootActions, RootTasks>((action, 
     // Root tasks, import into any component
     tasks: {
         // Demonstrates a task that is only an effect
-        SetDocTitle: ({ title }) => ({
-            perform: () => {
+        SetDocTitle: ({ title }): TaskSpec<RootProps, RootState> => ({
+            perform: (): void => {
                 document.title = title;
             }
         })
     },
 
-    view(id, { state }) {
-        return div(`#${id}.page.${state.theme}`, [
-            (() => {
+    view(id, { state }): VNode {
+        return div(`#${id}.page.${state.theme}`,
+            ((): VNode => {
                 switch (state.page) {
                     case "aboutPage":
                         return aboutPage("#about-page", { onSetTheme: action("SetTheme") });
@@ -73,7 +73,7 @@ export default component<RootProps, RootState, RootActions, RootTasks>((action, 
                         return counterPage("#counter-page", { onSetTheme: action("SetTheme") });
                 }
             })()
-        ]);
+        );
     }
 
 }));

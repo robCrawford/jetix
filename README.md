@@ -17,35 +17,36 @@ See a [single page app example](http://robcrawford.github.io/demos/jetix/?debug)
 *Counter component [(from SPA src)](https://github.com/robCrawford/jetix/tree/master/example)*
 
 ```JavaScript
-import { component, html } from "jetix";
+import { component, html, Config, VNode, Next, TaskSpec } from "jetix";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
 const { div, button } = html;
 
-type Props = {
+export type Props = {
     readonly start: number;
 };
 
-type State = {
+export type State = {
     counter: number;
     feedback: string;
 };
 
 type Actions = {
-    "Increment": { step: number };
-    "Decrement": { step: number };
-    "Validate": null;
-    "SetFeedback": { text: string };
+    Increment: { step: number };
+    Decrement: { step: number };
+    Validate: null;
+    SetFeedback: { text: string };
 };
 
 type Tasks = {
-    "ValidateCount": { count: number };
+    ValidateCount: { count: number };
 }
 
-export default component<Props, State, Actions, Tasks>((action, task) => ({
+
+export default component<Props, State, Actions, Tasks>((action, task): Config<Props, State, Actions, Tasks> => ({
 
     // Initial state
-    state: (props) => ({
+    state: (props): State => ({
         counter: props.start,
         feedback: ""
     }),
@@ -55,7 +56,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
 
     // Action handlers return new state, and any next actions/tasks
     actions: {
-        Increment: ({ step }, { props, state, rootState }) => {
+        Increment: ({ step }, { props, state, rootState }): { state: State; next: Next } => {
             return {
                 state: {
                     ...state,
@@ -64,7 +65,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 next: action("Validate")
             };
         },
-        Decrement: ({ step }, { props, state, rootState }) => {
+        Decrement: ({ step }, { props, state, rootState }): { state: State; next: Next } => {
             return {
                 state: {
                     ...state,
@@ -73,7 +74,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 next: action("Validate")
             };
         },
-        Validate: (_, { props, state, rootState }) => {
+        Validate: (_, { props, state, rootState }): { state: State; next: Next } => {
             return {
                 state,
                 next: [
@@ -82,7 +83,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                     task("ValidateCount", { count: state.counter })
                 ]};
         },
-        SetFeedback: ({ text }, { props, state, rootState }) => {
+        SetFeedback: ({ text }, { props, state, rootState }): { state: State } => {
             return {
                 state: {
                     ...state,
@@ -94,13 +95,13 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
 
     // Task handlers provide callbacks for effects and async operations that may fail
     tasks: {
-        ValidateCount: ({ count }) => {
+        ValidateCount: ({ count }): TaskSpec<Props, State> => {
             return {
-                perform: () => validateCount(count),
-                success: (result: { text: string }, { props, state, rootState }) => {
+                perform: (): Promise<{ text: string }> => validateCount(count),
+                success: (result: { text: string }, { props, state, rootState }): Next => {
                     return action("SetFeedback", result);
                 },
-                failure: (err, { props, state, rootState }) => {
+                failure: (err, { props, state, rootState }): Next => {
                     return action("SetFeedback", { text: "Unavailable" });
                 }
             };
@@ -108,7 +109,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     },
 
     // View renders from props & state
-    view(id, { props, state, rootState }) {
+    view(id, { props, state, rootState }): VNode {
         return div(`#${id}.counter`, [
             button(
                 { on: { click: action("Increment", { step: 1 }) } },
@@ -136,7 +137,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
 *Hello World!*
 
 ```JavaScript
-import { component, html, mount } from "jetix";
+import { component, html, mount, Config, Next, TaskSpec, VNode } from "jetix";
 const { div } = html;
 
 type Props = {};
@@ -153,9 +154,9 @@ type Tasks = {
     SetDocTitle: { title: string };
 }
 
-const app = component<Props, State, Actions, Tasks>((action, task) => ({
+const app = component<Props, State, Actions, Tasks>((action, task): Config<Props, State, Actions, Tasks> => ({
 
-    state: () => ({ message: "" }),
+    state: (): State => ({ message: "" }),
 
     init: action(
         "UpdateMessage",
@@ -163,7 +164,7 @@ const app = component<Props, State, Actions, Tasks>((action, task) => ({
     ),
 
     actions: {
-        UpdateMessage: ({ message }, { props, state }) => {
+        UpdateMessage: ({ message }, { props, state }): { state: State; next: Next } => {
             return {
                 state: {
                     ...state,
@@ -175,14 +176,14 @@ const app = component<Props, State, Actions, Tasks>((action, task) => ({
     },
 
     tasks: {
-        SetDocTitle: ({ title }) => ({
-            perform: () => {
+        SetDocTitle: ({ title }): TaskSpec<Props, State> => ({
+            perform: (): void => {
                 document.title = title;
             }
         })
     },
 
-    view(id, props, state) {
+    view(id, { props, state }): VNode {
         return div(`#${id}-message`, state.message);
     }
 
@@ -190,6 +191,6 @@ const app = component<Props, State, Actions, Tasks>((action, task) => ({
 
 document.addEventListener(
     "DOMContentLoaded",
-    () => mount({ app, props: {} })
+    (): void => mount({ app, props: {} })
 );
 ```

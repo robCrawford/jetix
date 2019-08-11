@@ -1,10 +1,10 @@
-import { component, rootAction, html } from "../../../src/jetix";
+import { component, rootAction, html, Config, VNode } from "../../../src/jetix";
 const { div, button } = html;
 
 
-export default component(() => ({
+export default component((): Config => ({
 
-    view(id) {
+    view(id): VNode {
         return div(`#${id}`, [
             button(
                 { on: { click: rootAction("SetTheme", { theme: "light" }) } },

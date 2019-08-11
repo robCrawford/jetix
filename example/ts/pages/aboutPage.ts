@@ -1,13 +1,13 @@
-import { component, html, rootTask } from "../../../src/jetix";
+import { component, html, rootTask, Config, VNode } from "../../../src/jetix";
 import themeMenu from "../components/themeMenu";
 const { div, h1, a } = html;
 
 
-export default component(() => ({
+export default component((): Config => ({
 
     init: rootTask("SetDocTitle", { title: "About" }),
 
-    view(id) {
+    view(id): VNode {
         return div(`#${id}`,
             div(".intro", [
                 themeMenu("#theme-menu"),

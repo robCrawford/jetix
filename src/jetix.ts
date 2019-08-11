@@ -1,5 +1,5 @@
 import { patch, setHook, VNode } from "./vdom";
-export { html } from "./vdom";
+export { html, VNode } from "./vdom";
 import { log } from "./jetixLog";
 import equal from 'fast-deep-equal';
 
@@ -48,7 +48,7 @@ export type TaskSpec<P, S> = {
     failure?: (error: {}, ctx: Context<P, S>) => Next;
 };
 
-export type Config<P, S, A, T> = {
+export type Config<P = {}, S = {}, A = {}, T = {}> = {
     state?: (props: P) => S;
     init?: Next;
     actions?: {[K in keyof A]: ActionHandler<A[K], P, S>};

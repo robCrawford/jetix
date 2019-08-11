@@ -1,4 +1,4 @@
-import { component, html } from "../../../src/jetix";
+import { component, html, Config, VNode, Next, TaskSpec } from "../../../src/jetix";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
 const { div, button } = html;
@@ -13,20 +13,21 @@ export type State = {
 };
 
 type Actions = {
-    "Increment": { step: number };
-    "Decrement": { step: number };
-    "Validate": null;
-    "SetFeedback": { text: string };
+    Increment: { step: number };
+    Decrement: { step: number };
+    Validate: null;
+    SetFeedback: { text: string };
 };
 
 type Tasks = {
-    "ValidateCount": { count: number };
+    ValidateCount: { count: number };
 }
 
-export default component<Props, State, Actions, Tasks>((action, task) => ({
+
+export default component<Props, State, Actions, Tasks>((action, task): Config<Props, State, Actions, Tasks> => ({
 
     // Initial state
-    state: (props) => ({
+    state: (props): State => ({
         counter: props.start,
         feedback: ""
     }),
@@ -36,7 +37,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
 
     // Action handlers return new state, and any next actions/tasks
     actions: {
-        Increment: ({ step }, { props, state, rootState }) => {
+        Increment: ({ step }, { props, state, rootState }): { state: State; next: Next } => {
             return {
                 state: {
                     ...state,
@@ -45,7 +46,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 next: action("Validate")
             };
         },
-        Decrement: ({ step }, { props, state, rootState }) => {
+        Decrement: ({ step }, { props, state, rootState }): { state: State; next: Next } => {
             return {
                 state: {
                     ...state,
@@ -54,7 +55,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                 next: action("Validate")
             };
         },
-        Validate: (_, { props, state, rootState }) => {
+        Validate: (_, { props, state, rootState }): { state: State; next: Next } => {
             return {
                 state,
                 next: [
@@ -63,7 +64,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
                     task("ValidateCount", { count: state.counter })
                 ]};
         },
-        SetFeedback: ({ text }, { props, state, rootState }) => {
+        SetFeedback: ({ text }, { props, state, rootState }): { state: State } => {
             return {
                 state: {
                     ...state,
@@ -75,13 +76,13 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
 
     // Task handlers provide callbacks for effects and async operations that may fail
     tasks: {
-        ValidateCount: ({ count }) => {
+        ValidateCount: ({ count }): TaskSpec<Props, State> => {
             return {
-                perform: () => validateCount(count),
-                success: (result: { text: string }, { props, state, rootState }) => {
+                perform: (): Promise<{ text: string }> => validateCount(count),
+                success: (result: { text: string }, { props, state, rootState }): Next => {
                     return action("SetFeedback", result);
                 },
-                failure: (err, { props, state, rootState }) => {
+                failure: (err, { props, state, rootState }): Next => {
                     return action("SetFeedback", { text: "Unavailable" });
                 }
             };
@@ -89,7 +90,7 @@ export default component<Props, State, Actions, Tasks>((action, task) => ({
     },
 
     // View renders from props & state
-    view(id, { props, state, rootState }) {
+    view(id, { props, state, rootState }): VNode {
         return div(`#${id}.counter`, [
             button(
                 { on: { click: action("Increment", { step: 1 }) } },

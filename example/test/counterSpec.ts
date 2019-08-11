@@ -9,9 +9,9 @@ const testCtx = {
 
 const isArray = Array.isArray;
 
-describe("Counter component", function() {
+describe("Counter component", function(): void {
 
-    it("should increment counter and return 'Validate' for 'Increment' action", function() {
+    it("should increment counter and return 'Validate' for 'Increment' action", function(): void {
         const { runAction } = initComponent(counter, { start: 0 });
         const { state, next } = runAction<State>("Increment", { step: 1 });
         expect(isArray(next)).toBe(false);
@@ -23,7 +23,7 @@ describe("Counter component", function() {
         }
     });
 
-    it("should decrement counter and return 'Validate' for 'Decrement' action", function() {
+    it("should decrement counter and return 'Validate' for 'Decrement' action", function(): void {
         const { runAction } = initComponent(counter, { start: 0 });
         const { state, next } = runAction<State>("Decrement", { step: 1 });
         expect(isArray(next)).toBe(false);
@@ -35,7 +35,7 @@ describe("Counter component", function() {
         }
     });
 
-    it("should return correct actions for 'Validate' action", function() {
+    it("should return correct actions for 'Validate' action", function(): void {
         const { initialState, runAction, getTask } = initComponent(counter, { start: 0 });
 
         const { state, next } = runAction<State>("Validate");
@@ -77,7 +77,7 @@ describe("Counter component", function() {
         }
     });
 
-    it("should update state with no return action for 'SetFeedback' action", function() {
+    it("should update state with no return action for 'SetFeedback' action", function(): void {
         const { runAction } = initComponent(counter, { start: 0 });
         const testStr = "test feedback";
         const { state, next } = runAction<State>("SetFeedback", { text: testStr });

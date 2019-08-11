@@ -1,4 +1,4 @@
-import { ActionThunk, component, html } from "../../../src/jetix";
+import { ActionThunk, component, html, Config, VNode, Next } from "../../../src/jetix";
 const { div, button } = html;
 
 export type Props = {
@@ -11,17 +11,18 @@ export type State = {
 };
 
 type Actions = {
-    "Dismiss": null;
+    Dismiss: null;
 }
 
-export default component<Props, State, Actions>(action => ({
 
-    state: () => ({
+export default component<Props, State, Actions>((action): Config<Props, State, Actions> => ({
+
+    state: (): State => ({
         show: true
     }),
 
     actions: {
-        Dismiss: (_, { props, state }) => {
+        Dismiss: (_, { props, state }): {state: State; next: Next} => {
             return {
                 state: {
                     ...state,
@@ -32,7 +33,7 @@ export default component<Props, State, Actions>(action => ({
         }
     },
 
-    view(id, { props, state }) {
+    view(id, { props, state }): VNode {
         return div(`#${id}.notification`, {
             class: {
                 show: state.show && props.text.length
