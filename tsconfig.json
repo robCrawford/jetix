@@ -1,18 +1,18 @@
 {
-    "compilerOptions": {
-        "lib": ["dom", "es2017"],
-        "target": "es5",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "declaration": true,
-        "esModuleInterop": true,
-        "outDir": "./dist/"
-    },
-    "include": [
-        "./src/jetix.ts"
-    ],
-    "exclude": [
-        ".git",
-        "node_modules"
-    ]
+  "compilerOptions": {
+    "lib": ["dom", "es2017"],
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "declaration": true,
+    "esModuleInterop": true,
+    "outDir": "./dist/"
+  },
+  "include": [
+    "./src/jetix.ts"
+  ],
+  "exclude": [
+    ".git",
+    "node_modules"
+  ]
 }

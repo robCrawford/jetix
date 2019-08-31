@@ -16,14 +16,14 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^24.0.15",
-    "@typescript-eslint/eslint-plugin": "^1.7.0",
-    "@typescript-eslint/parser": "^1.7.0",
+    "@typescript-eslint/eslint-plugin": "^2.0.0",
+    "@typescript-eslint/parser": "^2.0.0",
     "cross-env": "^5.2.0",
-    "eslint": "^5.16.0",
+    "eslint": "^6.3.0",
     "jest": "^24.8.0",
     "parcel-bundler": "^1.12.3",
     "ts-jest": "^24.0.2",
-    "typescript": "^3.4.5"
+    "typescript": "^3.6.2"
   },
   "dependencies": {
     "jetix": "^0.1.0",
