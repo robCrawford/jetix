@@ -40,7 +40,7 @@ export type ActionHandler<D, P, S> = (
   ctx: Context<P, S>
 ) => { state: S; next?: Next };
 
-  type TaskHandler<D, P, S> = (data: D) => TaskSpec<P, S>;
+type TaskHandler<D, P, S> = (data: D) => TaskSpec<P, S>;
 
 export type TaskSpec<P, S> = {
   perform: () => Promise<{}> | void;
@@ -88,7 +88,6 @@ export function component<P = {}, S = {}, A = {}, T = {}>(
   renderFn.getConfig = getConfig;
   return renderFn;
 }
-
 
 export function renderComponent<P extends {}, S extends {}, A, T>(
   id: string,

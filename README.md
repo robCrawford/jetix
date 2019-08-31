@@ -3,6 +3,9 @@
 
 *Type-safe HyperScript components using pure functions.*
 
+This is similar to the React/Redux pattern but is more directly inspired by Elm.  
+It provides minimal wiring for components consisting of pure functions, with high TypeScript coverage.  
+
 - Based on [Elm's MUV pattern](https://guide.elm-lang.org/architecture/), unidirectional and lightweight.
 - Inspired by this [effects as data](https://www.youtube.com/watch?v=6EdXaWfoslc) talk for more pure functions and testability.
 - [hyperscript-helpers](https://github.com/ohanhi/hyperscript-helpers) means the view is just JS functions.
@@ -197,4 +200,28 @@ document.addEventListener(
   "DOMContentLoaded",
   (): void => mount({ app, props: {} })
 );
+```
+
+------------------------
+
+## Unit tests
+
+For tests the `action` and `task` functions just return data, so component logic can be tested without mocks.
+
+```JavaScript
+import { initComponent } from "../../src/jetixTest";
+import counter from "../ts/components/counter";
+
+// Calling `initComponent` returns the test API
+const { runAction, getTask } = initComponent(counter, { start: 0 });
+
+// Test the output of an action
+const { state, next } = runAction("Increment", { step: 1 });
+expect(state.counter).toBe(1);
+expect(next.name).toBe("Validate");
+
+// Test the output of a task
+const { success, failure } = getTask("ValidateCount", { count: 0 });
+const next = success({ text: "✓ Valid" });
+expect(next.name).toBe("SetFeedback");
 ```
