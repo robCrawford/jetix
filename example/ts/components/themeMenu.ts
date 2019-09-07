@@ -12,7 +12,7 @@ export default component((): Config => ({
       button(
         { on: { click: rootAction("SetTheme", { theme: "dark" }) } },
         "Dark theme"),
-      div('.note', "NOTE: Adding `debug` to the query string logs all state activity and renders.")
+      div('#note', "Add `debug` to the query string to activate state & render logging.")
     ]);
   }
 

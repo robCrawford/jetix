@@ -174,6 +174,8 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     ({ state, next } = (config.actions[actionName] as ActionHandler<ValueOf<A>, P, S>)(
       data, { props, state: prevState, rootState }
     ));
+    log.setStateGlobal(id, state);
+
     // Action handlers return existing state by ref if no changes
     stateChanged = prevState !== state;
     if (isRoot) {
@@ -222,12 +224,16 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
       const renderRequired = stateChanged || rootStateChanged || !equal(prevProps[id], props);
       if (renderRequired) {
         patch(componentRoot as VNode, (componentRoot = config.view(id, { props, state, rootState })));
-        setRenderRef(componentRoot, id, render);
         log.render(id, props);
-        publish("patch");
         if (isRoot) {
           rootStateChanged = false;
         }
+        // Run after all synchronous patches
+        setTimeout((): void => {
+          log.setStateGlobal(id, state);
+          setRenderRef(componentRoot as VNode, id, render);
+          publish("patch");
+        });
       }
       else {
         log.noRender(id);
@@ -252,6 +258,8 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
   }
 
   componentRoot = config.view(id, { props, state, rootState });
+  log.setStateGlobal(id, state);
+
   setRenderRef(componentRoot, id, render);
   log.render(id, props);
   return componentRoot;
@@ -290,13 +298,11 @@ function renderById(id: string, props: {}): VNode | void {
 }
 
 function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
-  // Run after all synchronous patches
-  setTimeout((): void => {
-    renderRefs[id] = render;
-    setHook(vnode, "destroy", (): void => {
-      delete renderRefs[id];
-      delete prevProps[id];
-    });
+  renderRefs[id] = render;
+  setHook(vnode, "destroy", (): void => {
+    delete renderRefs[id];
+    delete prevProps[id];
+    log.setStateGlobal(id, undefined);
   });
 }
 

@@ -40,7 +40,7 @@ a {
   vertical-align: top;
   text-align: center;
   background: #84a8c9;
-  padding: 20px;
+  padding: 14px;
   margin-bottom: 20px;
   border-radius: 3px;
   font-size: 14px;
@@ -73,7 +73,7 @@ a {
   display: block;
   padding: 3px 7px 4px;
   margin: 3px auto 5px;
-  border-radius: 3px;
+  border-radius: 2px;
   border: 1px solid #BBB;
   width: 80%;
   margin-top: 5px;
@@ -83,7 +83,7 @@ a {
   border-color: #444;
   color: #FFF;
 }
-.note {
+#note {
   position: fixed;
   top: 0;
   right: 0;
@@ -91,4 +91,22 @@ a {
   padding: 10px 14px;
   border-bottom-left-radius: 5px;
   color: #777;
+}
+.debug #note {
+  display: none;
+}
+#state {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background: #DDD;
+  padding: 15px;
+  border-bottom-left-radius: 5px;
+  font-size: 11px;
+  min-width: 250px;
+  margin: 0;
+}
+.debug #state {
+  display: block;
 }

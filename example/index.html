@@ -8,5 +8,30 @@
 <body>
   <div id="app"></div>
   <script src="./ts/app.ts"></script>
+
+  <!-- Logging UI -->
+  <pre id="state"></pre>
+  <style>
+    pre div {
+      font: 10px sans-serif;
+      background: #fff;
+      padding: 5px 10px;
+      margin: 15px -10px -10px;
+      border-radius: 2px;
+    }
+    pre p {
+      margin: 2px;
+    }
+  </style>
+  <script>
+    if (/[&?]debug/.test(window.location.search)) {
+      document.body.className = 'debug';
+      const stateEl = document.getElementById("state");
+      const noteHtml = "<div><p>A state timeline with all renders is also logged to JS console.</p><i>(The DOM doesn't update unless render() changes the VDOM.)</i></div>";
+      document.addEventListener('patch', () => {
+        stateEl.innerHTML = JSON.stringify(window.state, null, 4) + noteHtml;
+      });
+    }
+  </script>
 </body>
 </html>

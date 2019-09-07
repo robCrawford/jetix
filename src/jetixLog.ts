@@ -6,6 +6,12 @@ let groupId = '';
 const logEnabled = /[&?]debug/.test(window.location.search);
 
 export const log = ({
+  setStateGlobal(id: string, state: {}): void {
+    if (logEnabled) {
+      const global: { state: {} } = window as Window & typeof globalThis & { state: {} };
+      (global.state || (global.state = {}))[id] = state;
+    }
+  },
   noInitialAction(id: string, state: {}): void {
     if (logEnabled) {
       console.group(`%c#${id}`, "color: #69f");
