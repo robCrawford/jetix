@@ -1,4 +1,4 @@
-import { component, html, rootTask, Config, VNode } from "../../../src/jetix";
+import { component, html, rootTask, Config, VNode } from "jetix";
 import counter from "../components/counter";
 import themeMenu from "../components/themeMenu";
 const { div, h1, a } = html;

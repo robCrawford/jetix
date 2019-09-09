@@ -1,4 +1,4 @@
-import { component, html, Config, VNode, TaskSpec } from "../../src/jetix";
+import { component, html, Config, VNode, TaskSpec } from "jetix";
 import counterPage from "./pages/counterPage";
 import aboutPage from "./pages/aboutPage";
 import "./router";

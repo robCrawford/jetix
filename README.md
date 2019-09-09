@@ -20,7 +20,7 @@ See a [single page app example](http://robcrawford.github.io/demos/jetix/?debug)
 *Counter component [(from SPA src)](https://github.com/robCrawford/jetix/tree/master/example)*
 
 ```JavaScript
-import { component, html, Config, VNode, Next, TaskSpec } from "../../../src/jetix";
+import { component, html, Config, VNode, Next, TaskSpec } from "jetix";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
 const { div, button } = html;
@@ -209,11 +209,11 @@ document.addEventListener(
 For tests the `action` and `task` functions just return data, so component logic can be tested without mocks.
 
 ```JavaScript
-import { initComponent } from "../../src/jetixTest";
+import { testComponent } from "jetix";
 import counter from "../ts/components/counter";
 
-// Calling `initComponent` returns the test API
-const { runAction, getTask } = initComponent(counter, { start: 0 });
+// Calling `testComponent` returns the test API
+const { runAction, getTask } = testComponent(counter, { start: 0 });
 
 // Test the output of an action
 const { state, next } = runAction("Increment", { step: 1 });

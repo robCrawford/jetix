@@ -1,9 +1,9 @@
 /*
 API for unit testing Jetix components
 
-- Initialise component
+- Initialise component test API
 import counter from "../ts/components/counter";
-const { config, initialState, runAction, getTask } = initComponent(counter, { start: 0 });
+const { config, initialState, runAction, getTask } = testComponent(counter, { start: 0 });
 
 - Run an action to inspect result `state` and `next` as data
 const { state, next } = runAction("Increment", { step: 1 });
@@ -35,7 +35,7 @@ type TestTaskSpec<P, S> = {
 // Returns next action/task inputs as data
 const nextToData = (name: string, data?: {}): NextAsData => ({ name, data });
 
-export function initComponent(component, props): ComponentTestApi {
+export function testComponent(component, props): ComponentTestApi {
   // Initialise component passing in `nextToData()` instead of `action()` and `task()` functions
   const config = component.getConfig(nextToData, nextToData);
   const initialState = config.state(props);

@@ -1,4 +1,4 @@
-import { component, html, Config, VNode, Next, TaskSpec } from "../../../src/jetix";
+import { component, html, Config, VNode, Next, TaskSpec } from "jetix";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
 const { div, button } = html;

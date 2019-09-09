@@ -1,6 +1,7 @@
 import { patch, setHook, VNode } from "./vdom";
 export { html, VNode } from "./vdom";
 import { log } from "./jetixLog";
+export * from './jetixTest';
 import equal from 'fast-deep-equal';
 
 type ValueOf<T> = T[keyof T];
@@ -174,8 +175,6 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     ({ state, next } = (config.actions[actionName] as ActionHandler<ValueOf<A>, P, S>)(
       data, { props, state: prevState, rootState }
     ));
-    log.setStateGlobal(id, state);
-
     // Action handlers return existing state by ref if no changes
     stateChanged = prevState !== state;
     if (isRoot) {

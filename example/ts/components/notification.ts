@@ -1,4 +1,4 @@
-import { ActionThunk, component, html, Config, VNode, Next } from "../../../src/jetix";
+import { ActionThunk, component, html, Config, VNode, Next } from "jetix";
 const { div, button } = html;
 
 export type Props = {
