@@ -3,25 +3,25 @@ import notification from "./notification";
 import { validateCount } from "../services/validation";
 const { div, button } = html;
 
-export type Props = {
-  readonly start: number;
-};
+export type Props = Readonly<{
+  start: number;
+}>;
 
-export type State = {
+export type State = Readonly<{
   counter: number;
   feedback: string;
-};
+}>;
 
-type Actions = {
+type Actions = Readonly<{
   Increment: { step: number };
   Decrement: { step: number };
   Validate: null;
   SetFeedback: { text: string };
-};
+}>;
 
-type Tasks = {
+type Tasks = Readonly<{
   ValidateCount: { count: number };
-}
+}>;
 
 
 export default component<Props, State, Actions, Tasks>(

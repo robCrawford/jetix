@@ -4,21 +4,21 @@ import aboutPage from "./pages/aboutPage";
 import "./router";
 const { div } = html;
 
-export type RootProps = {};
+export type RootProps = Readonly<{}>;
 
-export type RootState = {
+export type RootState = Readonly<{
   theme: Theme;
   page?: Page;
-};
+}>;
 
-export type RootActions = {
+export type RootActions = Readonly<{
   SetPage: { page: Page };
   SetTheme: { theme: Theme };
-};
+}>;
 
-export type RootTasks = {
+export type RootTasks = Readonly<{
   SetDocTitle: { title: string };
-}
+}>;
 
 export type Page = "counterPage" | "aboutPage";
 

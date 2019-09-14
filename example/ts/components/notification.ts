@@ -1,18 +1,18 @@
 import { ActionThunk, component, html, Config, VNode, Next } from "jetix";
 const { div, button } = html;
 
-export type Props = {
-  readonly text: string;
-  readonly onDismiss: ActionThunk;
-};
+export type Props = Readonly<{
+  text: string;
+  onDismiss: ActionThunk;
+}>;
 
-export type State = {
+export type State = Readonly<{
   show: boolean;
-};
+}>;
 
-type Actions = {
+type Actions = Readonly<{
   Dismiss: null;
-}
+}>;
 
 
 export default component<Props, State, Actions>(
