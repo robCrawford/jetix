@@ -27,7 +27,7 @@
     if (/[&?]debug/.test(window.location.search)) {
       document.body.className = 'debug';
       const stateEl = document.getElementById("state");
-      const noteHtml = "<div><p>A state timeline with all renders is also logged to JS console.</p><i>(The DOM doesn't update unless render() changes the VDOM.)</i></div>";
+      const noteHtml = "<div><p>A state, render, patch timeline is logged to the JS console.</p></div>";
       document.addEventListener('patch', () => {
         stateEl.innerHTML = JSON.stringify(window.state, null, 4) + noteHtml;
       });

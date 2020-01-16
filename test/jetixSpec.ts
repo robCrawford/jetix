@@ -2,14 +2,16 @@ import { renderComponent, _setTestKey, rootAction, component, html, rootTask } f
 import * as vdom from "../src/vdom";
 const { div } = html;
 
+const patchSpy = jest.spyOn(vdom, "patch");
 const testKey = _setTestKey({});
 
-const app = component((action, task) => ({
-  state: () => ({ str: "" }),
+// Initialise root app, populates rootAction, rootTask imports
+component((action, task) => ({
+  state: () => ({ timestamp: 0, theme: "a" }),
   actions: {
-    TestAction: ({ str }, { state }) => {
-      return { state: { ...state, str } };
-    }
+    SetTimestamp: ({ timestamp }, { state }) => {
+      return { state: { ...state, timestamp } };
+    },
   },
   tasks: {
     TestTask: () => ({
@@ -17,28 +19,26 @@ const app = component((action, task) => ({
     })
   },
   view(id, { state }) {
-    return div(`#${id}`, "test");
+    return div(`#${id}`, "test")
   }
 }))("app"); // This id is usually set by `mount`, allows `rootAction`/`rootTask`
 
+
 describe("Jetix", function() {
-  let patchCount, state, action;
+  let state, action;
   let componentId = 0;
   const getId = () => `_${componentId++}`;
 
   function view(id, { props, state: curState }) {
     state = curState;
-    return {} as vdom.VNode;
+    return div("Test");
   }
 
   beforeEach(function() {
-    patchCount = 0;
-    spyOn(vdom, "patch").and.callFake(() => {
-      patchCount++;
-    });
+    patchSpy.mockClear();
   });
 
-  it("should render once following a chain of actions", function() {
+  it("should patch once following a chain of actions", function() {
     const numTestActions = 20;
 
     renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
@@ -67,14 +67,14 @@ describe("Jetix", function() {
       };
     });
 
-    expect(patchCount).toBe(0);
+    expect(patchSpy).not.toHaveBeenCalled();
     action("Increment1")(testKey);
-    logResult(state.count, patchCount);
+    logResult(state.count, patchSpy.mock.calls.length);
     expect(state.count).toBe(numTestActions);
-    expect(patchCount).toBe(1);
+    expect(patchSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("should render once following an array of actions", function() {
+  it("should patch once following an array of actions", function() {
     const numTestActions = 20;
 
     renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
@@ -101,24 +101,24 @@ describe("Jetix", function() {
       };
     });
 
-    expect(patchCount).toBe(0);
+    expect(patchSpy).not.toHaveBeenCalled();
     action("Increment")(testKey);
-    logResult(state.count, patchCount);
+    logResult(state.count, patchSpy.mock.calls.length);
     expect(state.count).toBe(numTestActions);
-    expect(patchCount).toBe(1);
+    expect(patchSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("should render twice when a chain of actions contains a promise", function(done) {
+  it("should patch twice when a chain of actions contains a promise", function(done) {
     const numTestActions = 20;
     runActionsWithPromise(numTestActions, 2, done);
-    expect(patchCount).toBe(0);
+    expect(patchSpy).not.toHaveBeenCalled();
     action("Increment1")(testKey);
   });
 
-  it("should render once when initial action chain contains a promise", function(done) {
+  it("should patch once when initial action chain contains a promise", function(done) {
     const numTestActions = 20;
-    runActionsWithPromise(numTestActions, 1, done, "Increment1"); // 1 render after promise
-    expect(patchCount).toBe(0); // No render after init
+    runActionsWithPromise(numTestActions, 1, done, "Increment1"); // 1 patch after promise
+    expect(patchSpy).not.toHaveBeenCalled(); // No patch after init
   });
 
   function runActionsWithPromise(numTestActions, expectedPatchCount, done, initialAction?) {
@@ -140,9 +140,9 @@ describe("Jetix", function() {
         const newState = { ...state, count: state.count + 1 };
         setTimeout(() => {
           // After last action has been processed
-          logResult(newState.count, patchCount);
+          logResult(newState.count, patchSpy.mock.calls.length);
           expect(newState.count).toBe(numTestActions);
-          expect(patchCount).toBe(expectedPatchCount);
+          expect(patchSpy).toHaveBeenCalledTimes(expectedPatchCount);
           done();
         });
         return {
@@ -175,7 +175,7 @@ describe("Jetix", function() {
     });
   }
 
-  it("should render twice when a promise returns an array of actions", function(done) {
+  it("should patch twice when a promise returns an array of actions", function(done) {
     renderComponent<{}, {count: number}, {
       "Increment2": null;
       "Increment3": null;
@@ -200,9 +200,9 @@ describe("Jetix", function() {
             const newState = { ...state, count: state.count + 1 };
             setTimeout(() => {
               // After last action has been processed
-              logResult(newState.count, patchCount);
+              logResult(newState.count, patchSpy.mock.calls.length);
               expect(newState.count).toBe(3);
-              expect(patchCount).toBe(2);
+              expect(patchSpy).toHaveBeenCalledTimes(2);
               done();
             });
             return {
@@ -220,146 +220,146 @@ describe("Jetix", function() {
       };
     });
 
-    expect(patchCount).toBe(0);
+    expect(patchSpy).not.toHaveBeenCalled();
     action("Increment1")(testKey);
   });
 
-  it("should render once following a mix of action arrays and chains", function() {
+  it("should patch once following a mix of action arrays and chains", function() {
     const numTestActions = 20; // Must be even due to `i % 2`
 
-    expect(patchCount).toBe(0);
+    expect(patchSpy).not.toHaveBeenCalled();
     runMixedActions(numTestActions);
     action("IncrementA2-Init")(testKey);
 
-    logResult(state.count, patchCount);
+    logResult(state.count, patchSpy.mock.calls.length);
     expect(state.count).toBe(
       getMixedActionsIncr(numTestActions)
     );
-    expect(patchCount).toBe(1);
+    expect(patchSpy).toHaveBeenCalledTimes(1);
   });
 
-    it("should not render when initial action is a mix of arrays and chains", function() {
-      const numTestActions = 20; // Must be even due to `i % 2`
+  it("should not patch when initial action is a mix of arrays and chains", function() {
+    const numTestActions = 20; // Must be even due to `i % 2`
 
-      expect(patchCount).toBe(0);
-      runMixedActions(numTestActions, "IncrementA2-Init");
+    expect(patchSpy).not.toHaveBeenCalled();
+    runMixedActions(numTestActions, "IncrementA2-Init");
 
-      logResult(state.count, patchCount);
-      expect(state.count).toBe(
-        getMixedActionsIncr(numTestActions)
-        );
-        expect(patchCount).toBe(0);
-      });
+    logResult(state.count, patchSpy.mock.calls.length);
+    expect(state.count).toBe(
+      getMixedActionsIncr(numTestActions)
+    );
+    expect(patchSpy).not.toHaveBeenCalled();
+  });
 
-      function runMixedActions(numTestActions, initialAction?) {
-        renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
-          action = a;
-          const actions = {};
-          const actionsArray1 = [];
-          const actionsArray2 = [];
+  function runMixedActions(numTestActions, initialAction?) {
+    renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
+      action = a;
+      const actions = {};
+      const actionsArray1 = [];
+      const actionsArray2 = [];
 
-          // Array of single increment actions that return nothing
-          for (let i = 1; i <= numTestActions; i++) {
-            actions["IncrementA1-" + i] =
-            (_, { props, state }) => {
-              return {
-                state: { ...state, count: state.count + 1 }
-              };
-            };
-            actionsArray1.push(action("IncrementA1-" + i));
-          }
-          // Series of increment actions "IncrementS1-1" - "IncrementS1-19"
-          for (let i = 1; i < numTestActions; i++) {
-            actions["IncrementS1-" + i] =
-            (_, { props, state }) => {
-              return {
-                state: { ...state, count: state.count + 1 },
-                next: action("IncrementS1-" + (i+1))
-              };
-            };
-          }
-          actions["IncrementS1-" + numTestActions] =
-          (_, { props, state }) => {
-            // "IncrementS1-20" returns `actionsArray1` array
-            return {
-              state: { ...state, count: state.count + 1 },
-              next: actionsArray1
-            };
-          };
-          // Series of increment actions "IncrementS2-1" - "IncrementS2-10"
-          for (let i = 1; i < numTestActions/2; i++) {
-            actions["IncrementS2-" + i] =
-            (_, { props, state }) => {
-              return {
-                state: { ...state, count: state.count + 1 },
-                next: action("IncrementS2-" + (i+1))
-              };
-            };
-          }
-          actions["IncrementS2-" + numTestActions/2] =
-          (_, { props, state }) => {
-            return { state: { ...state, count: state.count + 1 } };
-          };
-
-          // "IncrementA2-Init" returns `actionsArray2` array
-          for (let i = 1; i <= numTestActions; i++) {
-            actions["IncrementA2-" + i] =
-            (_, { props, state }) => {
-              // Half return chain "IncrementS1-1" - "IncrementS1-20",
-              // where "IncrementS1-20" returns `actionsArray1`
-              if (i % 2) {
-                return { state: { ...state, count: state.count + 1 }, next: action("IncrementS1-1") };
-              }
-              // Half return chain "IncrementS2-1" - "IncrementS2-10"
-              else {
-                return { state: { ...state, count: state.count + 1 }, next: action("IncrementS2-1") };
-              }
-            };
-            actionsArray2.push(action("IncrementA2-" + i));
-          }
-          actions["IncrementA2-Init"] =
-          (_, { props, state }) => ({ state, next: actionsArray2 });
-
+      // Array of single increment actions that return nothing
+      for (let i = 1; i <= numTestActions; i++) {
+        actions["IncrementA1-" + i] =
+        (_, { props, state }) => {
           return {
-            state: () => ({ count: 0 }),
-            init: initialAction ? a(initialAction) : undefined,
-            actions,
-            view
+            state: { ...state, count: state.count + 1 }
           };
-        });
+        };
+        actionsArray1.push(action("IncrementA1-" + i));
       }
-
-      it("should throw when an action is called manually", () => {
-        const a = rootAction("TestAction", {str: ""});
-        expect(() => a()).toThrow();
-      });
-
-      it("should allow action calls with a DOM event input", () => {
-        const a = rootAction("TestAction", {str: ""});
-        expect(() => a({eventPhase: 1})).not.toThrow();
-      });
-
-      it("should throw when a task is called manually", () => {
-        const a = rootTask("TestTask");
-        expect(() => a()).toThrow();
-      });
-
-      it("should allow task calls with a DOM event input", () => {
-        const a = rootTask("TestTask");
-        expect(() => a({eventPhase: 1})).not.toThrow();
-      });
-
-      function getMixedActionsIncr(numTestActions) {
-        const array1Incr = numTestActions;
-        const series1Incr = numTestActions + array1Incr;
-        const series2Incr = numTestActions/2;
-        const array2Incr = numTestActions + (numTestActions/2 * series1Incr) + (numTestActions/2 * series2Incr);
-        return array2Incr;
+      // Series of increment actions "IncrementS1-1" - "IncrementS1-19"
+      for (let i = 1; i < numTestActions; i++) {
+        actions["IncrementS1-" + i] =
+        (_, { props, state }) => {
+          return {
+            state: { ...state, count: state.count + 1 },
+            next: action("IncrementS1-" + (i+1))
+          };
+        };
       }
-
-      function logResult(numActions, numRenders) {
-        console.log('Completed ' + numActions + ' actions with '
-        + numRenders + ' render' + (numRenders === 1 ? '' : 's'));
+      actions["IncrementS1-" + numTestActions] =
+      (_, { props, state }) => {
+        // "IncrementS1-20" returns `actionsArray1` array
+        return {
+          state: { ...state, count: state.count + 1 },
+          next: actionsArray1
+        };
+      };
+      // Series of increment actions "IncrementS2-1" - "IncrementS2-10"
+      for (let i = 1; i < numTestActions/2; i++) {
+        actions["IncrementS2-" + i] =
+        (_, { props, state }) => {
+          return {
+            state: { ...state, count: state.count + 1 },
+            next: action("IncrementS2-" + (i+1))
+          };
+        };
       }
+      actions["IncrementS2-" + numTestActions/2] =
+      (_, { props, state }) => {
+        return { state: { ...state, count: state.count + 1 } };
+      };
 
+      // "IncrementA2-Init" returns `actionsArray2` array
+      for (let i = 1; i <= numTestActions; i++) {
+        actions["IncrementA2-" + i] =
+        (_, { props, state }) => {
+          // Half return chain "IncrementS1-1" - "IncrementS1-20",
+          // where "IncrementS1-20" returns `actionsArray1`
+          if (i % 2) {
+            return { state: { ...state, count: state.count + 1 }, next: action("IncrementS1-1") };
+          }
+          // Half return chain "IncrementS2-1" - "IncrementS2-10"
+          else {
+            return { state: { ...state, count: state.count + 1 }, next: action("IncrementS2-1") };
+          }
+        };
+        actionsArray2.push(action("IncrementA2-" + i));
+      }
+      actions["IncrementA2-Init"] =
+      (_, { props, state }) => ({ state, next: actionsArray2 });
+
+      return {
+        state: () => ({ count: 0 }),
+        init: initialAction ? a(initialAction) : undefined,
+        actions,
+        view
+      };
     });
+  }
+
+  it("should throw when an action is called manually", () => {
+    const a = rootAction("SetTimestamp", {timestamp: ""});
+    expect(() => a()).toThrow();
+  });
+
+  it("should allow action calls with a DOM event input", () => {
+    const a = rootAction("SetTimestamp", {timestamp: ""});
+    expect(() => a({eventPhase: 1})).not.toThrow();
+  });
+
+  it("should throw when a task is called manually", () => {
+    const a = rootTask("TestTask");
+    expect(() => a()).toThrow();
+  });
+
+  it("should allow task calls with a DOM event input", () => {
+    const a = rootTask("TestTask");
+    expect(() => a({eventPhase: 1})).not.toThrow();
+  });
+
+  function getMixedActionsIncr(numTestActions) {
+    const array1Incr = numTestActions;
+    const series1Incr = numTestActions + array1Incr;
+    const series2Incr = numTestActions/2;
+    const array2Incr = numTestActions + (numTestActions/2 * series1Incr) + (numTestActions/2 * series2Incr);
+    return array2Incr;
+  }
+
+  function logResult(numActions, patchCount) {
+    console.log('Completed ' + numActions + ' actions with '
+    + patchCount + ' patch' + (patchCount === 1 ? '' : 'es'));
+  }
+
+});
