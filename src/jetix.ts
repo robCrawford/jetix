@@ -62,12 +62,26 @@ export type GetConfig<P, S, A, T> =
 
 type RenderFn<T> = (props: T) => VNode | void;
 
-const appId = "app";
-const renderRefs: { [id: string]: RenderFn<{}> } = {};
-const prevProps: { [id: string]: {} } = {};
-let internalKey = {}; // Private unique value
-let rootState;
+
+// App state
+let renderRefs: { [id: string]: RenderFn<{}> } = {};
+let rootState: {} | undefined;
 let rootStateChanged = false;
+let prevProps: Record<string, {}> = {};
+let renderIds: Record<string, boolean> = {};
+let renderRootId: string | undefined;
+
+function resetAppState(): void {
+  renderRefs = {};
+  rootState = undefined;
+  rootStateChanged = false;
+  prevProps = {};
+  renderIds = {};
+  renderRootId = undefined;
+}
+
+const appId = "app";
+let internalKey = {}; // Private unique value
 
 export const _setTestKey = <T>(k: T): T => internalKey = k; // For lib unit tests
 export let rootAction;
@@ -79,10 +93,12 @@ export function component<P = {}, S = {}, A = {}, T = {}>(
   // Pass in callback that returns component config
   // Returns render function that is called by parent e.g. `counter("counter-0", { start: 0 })`
   const renderFn = (idStr: string, props?: P): VNode => {
-    const id = idStr.replace(/^#/, "");
-    if (!id.length) {
-      throw Error("Component requires an id");
+    const id = (idStr || "").replace(/^#/, "");
+    if (!id.length || renderIds[id]) {
+      throw Error(`Component${id ? ` "${id}" ` : ' '}must have a unique id!`);
     }
+    // Ids included in this render
+    renderIds[id] = true;
     return renderComponent<P, S, A, T>(id, props, getConfig);
   };
   // Add a handle to `getConfig` for tests
@@ -169,7 +185,6 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
   function update(actionName: keyof A, data?: ValueOf<A>): void {
     let next: Next;
     const prevState = deepFreeze(state);
-    prevProps[id] = props;
     log.updateStart(id, prevState, String(actionName), data);
 
     ({ state, next } = (config.actions[actionName] as ActionHandler<ValueOf<A>, P, S>)(
@@ -217,27 +232,46 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     }
   }
 
+  const isRenderRequired = (props: P): boolean => {
+    // `state`/`rootState` is the same ref when unchanged, `props` is always a new object so deep compare
+    return stateChanged || rootStateChanged || !equal(prevProps[id], props);
+  }
+
   const render: RenderFn<P> = (props: P): VNode | void => {
     if (!noRender) {
-      // `state` is same ref when unchanged but `props` is always a new object so deep compare
-      const renderRequired = stateChanged || rootStateChanged || !equal(prevProps[id], props);
-      if (renderRequired) {
-        patch(componentRoot as VNode, (componentRoot = config.view(id, { props, state, rootState })));
-        log.render(id, props);
-        if (isRoot) {
-          rootStateChanged = false;
+      if (isRenderRequired(props)) {
+        let isRenderRoot = false;
+        if (!renderRootId) {
+          // The root component of this render
+          renderRootId = id;
+          isRenderRoot = true;
         }
-        // Run after all synchronous patches
-        setTimeout((): void => {
-          log.setStateGlobal(id, state);
-          setRenderRef(componentRoot as VNode, id, render);
+        const prevComponentRoot = componentRoot;
+        componentRoot = config.view(id, { props, state, rootState });
+        log.render(id, props);
+
+        if (isRenderRoot) {
+          patch(prevComponentRoot as VNode, componentRoot);
+          log.patch();
+          renderRootId = undefined;
+          renderIds = {};
+        }
+        setRenderRef(componentRoot as VNode, id, render);
+        log.setStateGlobal(id, state);
+        if (isRenderRoot) {
           publish("patch");
-        });
+        }
       }
       else {
         log.noRender(id);
       }
+      // Reset change flags
+      stateChanged = false;
+      if (isRoot) {
+        rootStateChanged = false;
+      }
     }
+    prevProps[id] = props;
     return componentRoot;
   }
 
@@ -256,25 +290,30 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     rootState = state;
   }
 
+  log.render(id, props);
   componentRoot = config.view(id, { props, state, rootState });
+  prevProps[id] = props;
+  setRenderRef(componentRoot, id, render);
   log.setStateGlobal(id, state);
 
-  setRenderRef(componentRoot, id, render);
-  log.render(id, props);
   return componentRoot;
 }
-
 
 export function mount<A, P>({ app, props, init }: {
   app: (idStr: string, props?: P) => VNode;
   props: P;
   init?: (runRootAction: RunAction<A>) => void;
 }): void {
+  resetAppState();
   // Mount the top-level app component
   patch(
     document.getElementById(appId),
     app(appId, props)
   );
+  log.patch();
+  publish("patch");
+  renderIds = {};
+
   // Manually invoking an action without `internalKey` is an error, so `runRootAction`
   // is provided by `mount` for wiring up events to root actions (e.g. routing)
   if (init) {
@@ -299,9 +338,12 @@ function renderById(id: string, props: {}): VNode | void {
 function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
   renderRefs[id] = render;
   setHook(vnode, "destroy", (): void => {
-    delete renderRefs[id];
-    delete prevProps[id];
-    log.setStateGlobal(id, undefined);
+    // Component not found in `renderIds` for this render
+    if(!renderIds[id] && id !== renderRootId) {
+      delete renderRefs[id];
+      delete prevProps[id];
+      log.setStateGlobal(id, undefined);
+    }
   });
 }
 

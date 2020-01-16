@@ -63,7 +63,7 @@ export const log = ({
       console.groupEnd();
       let msg = `⟳ Render #${id}`;
       if (props && Object.keys(props).length) {
-        msg += `, props: ${JSON.stringify(props)}`;
+        msg += `, props: ${JSON.stringify(props, replacer)}`;
       }
       console.log(`%c${msg}`, "color: #888");
       groupId = '';
@@ -72,15 +72,24 @@ export const log = ({
   noRender(id: string): void {
     if (logEnabled) {
       console.groupEnd();
-      const msg = `! No render - #${id} has no changes`;
+      const msg = `- #${id} has no changes`;
       console.log(`%c${msg}`, "color: #888");
       groupId = '';
+    }
+  },
+  patch(): void {
+    if (logEnabled) {
+      console.log(`%c» PATCH`, "color: #888");
     }
   },
   manualError(id: string, name: string): void {
     throw Error(`#${id} "${name}" cannot be invoked manually`);
   }
 });
+
+function replacer(k: string, v: string | Function): string {
+  return (typeof v === 'function') ? '[fn]' : v;
+}
 
 window.addEventListener('error', (): void => {
   setTimeout((): void => {

@@ -3,15 +3,15 @@
 
 *Type-safe HyperScript components using pure functions.*
 
-This is similar to the React/Redux pattern but is more directly inspired by Elm.  
+This is similar to the React/Redux pattern but is more directly inspired by Elm.\
 It provides minimal wiring for components consisting of pure functions, with high TypeScript coverage.  
 
 - Based on [Elm's MUV pattern](https://guide.elm-lang.org/architecture/), unidirectional and lightweight.
 - Inspired by this [effects as data](https://www.youtube.com/watch?v=6EdXaWfoslc) talk for more pure functions and testability.
 - [hyperscript-helpers](https://github.com/ohanhi/hyperscript-helpers) means the view is just JS functions.
-- Optimised for [*least possible number of renders*](https://github.com/robCrawford/jetix/blob/master/test/jetixSpec.ts) and then to only the affected tree depth.  
+- Optimized for [least number of renders/vdom patches](https://github.com/robCrawford/jetix/blob/master/test/jetixSpec.ts).  
 
-Also contains lightweight prevention of anti-patterns like state mutation and manually calling declarative actions.  
+Also contains lightweight prevention of anti-patterns like state mutation and manually calling declarative actions.\
 See a [single page app example](http://robcrawford.github.io/demos/jetix/?debug) and its [src](https://github.com/robCrawford/jetix/tree/master/example).  
 
 ------------------------
