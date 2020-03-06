@@ -1,28 +1,9 @@
-import { renderComponent, _setTestKey, rootAction, component, html, rootTask } from "../src/jetix";
-import * as vdom from "../src/vdom";
+import { renderComponent, _setTestKey, component, html } from "./jetix";
+import * as vdom from "./vdom";
 const { div } = html;
 
 const patchSpy = jest.spyOn(vdom, "patch");
 const testKey = _setTestKey({});
-
-// Initialise root app, populates rootAction, rootTask imports
-component((action, task) => ({
-  state: () => ({ timestamp: 0, theme: "a" }),
-  actions: {
-    SetTimestamp: ({ timestamp }, { state }) => {
-      return { state: { ...state, timestamp } };
-    },
-  },
-  tasks: {
-    TestTask: () => ({
-      perform: () => {}
-    })
-  },
-  view(id, { state }) {
-    return div(`#${id}`, "test")
-  }
-}))("app"); // This id is usually set by `mount`, allows `rootAction`/`rootTask`
-
 
 describe("Jetix", function() {
   let state, action;
@@ -41,7 +22,7 @@ describe("Jetix", function() {
   it("should patch once following a chain of actions", function() {
     const numTestActions = 20;
 
-    renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
+    renderComponent(getId(), ({ action: a }) => {
       action = a;
       const actions = {};
 
@@ -77,7 +58,7 @@ describe("Jetix", function() {
   it("should patch once following an array of actions", function() {
     const numTestActions = 20;
 
-    renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
+    renderComponent(getId(), ({ action: a }) => {
       action = a;
       const actions = {};
       const incrementRetActions = [];
@@ -122,7 +103,7 @@ describe("Jetix", function() {
   });
 
   function runActionsWithPromise(numTestActions, expectedPatchCount, done, initialAction?) {
-    renderComponent<{}, {count: number}, any, any>(getId(), {}, (a, task) => {
+    renderComponent(getId(), ({ action: a, task }) => {
       action = a;
       const actions = {};
 
@@ -176,10 +157,7 @@ describe("Jetix", function() {
   }
 
   it("should patch twice when a promise returns an array of actions", function(done) {
-    renderComponent<{}, {count: number}, {
-      "Increment2": null;
-      "Increment3": null;
-    }, any>(getId(), {}, (a, task) => {
+    renderComponent(getId(), ({ action: a, task }) => {
       action = a;
 
       return {
@@ -187,17 +165,17 @@ describe("Jetix", function() {
         actions: {
           Increment1: (_, { props, state }) => {
             return {
-              state: { ...state, count: state.count + 1 },
+              state: { ...state, count: (state.count as number) + 1 },
               next: task("TestAsync")
             };
           },
           Increment2: (_, { props, state }) => {
             return {
-              state: { ...state, count: state.count + 1 }
+              state: { ...state, count: (state.count as number) + 1 }
             };
           },
           Increment3: (_, { props, state }) => {
-            const newState = { ...state, count: state.count + 1 };
+            const newState = { ...state, count: (state.count as number) + 1 };
             setTimeout(() => {
               // After last action has been processed
               logResult(newState.count, patchSpy.mock.calls.length);
@@ -252,7 +230,7 @@ describe("Jetix", function() {
   });
 
   function runMixedActions(numTestActions, initialAction?) {
-    renderComponent<{}, {count: number}, any, any>(getId(), {}, a => {
+    renderComponent(getId(), ({ action: a }) => {
       action = a;
       const actions = {};
       const actionsArray1 = [];
@@ -330,24 +308,53 @@ describe("Jetix", function() {
   }
 
   it("should throw when an action is called manually", () => {
-    const a = rootAction("SetTimestamp", {timestamp: ""});
+    const { a } = getComponentTestFns();
     expect(() => a()).toThrow();
   });
 
   it("should allow action calls with a DOM event input", () => {
-    const a = rootAction("SetTimestamp", {timestamp: ""});
+    const { a } = getComponentTestFns();
     expect(() => a({eventPhase: 1})).not.toThrow();
   });
 
   it("should throw when a task is called manually", () => {
-    const a = rootTask("TestTask");
-    expect(() => a()).toThrow();
+    const { t } = getComponentTestFns();
+    expect(() => t()).toThrow();
   });
 
   it("should allow task calls with a DOM event input", () => {
-    const a = rootTask("TestTask");
-    expect(() => a({eventPhase: 1})).not.toThrow();
+    const { t } = getComponentTestFns();
+    expect(() => t({eventPhase: 1})).not.toThrow();
   });
+
+  function getComponentTestFns() {
+    let a, t;
+
+    component<{
+      State: { timestamp: string, theme: string };
+      Actions: { SetTimestamp: { timestamp: string } };
+      Tasks: { TestTask: null };
+    }>(({ action, task }) => ({
+      state: () => ({ timestamp: "0", theme: "a" }),
+      actions: {
+        SetTimestamp: ({ timestamp }, { state }) => {
+          return { state: { ...state, timestamp } };
+        },
+      },
+      tasks: {
+        TestTask: () => ({
+          perform: () => {}
+        })
+      },
+      view(id, state) {
+        a = action("SetTimestamp", {timestamp: ""});
+        t = task("TestTask");
+        return div(`#${id}`, "test")
+      }
+    }))(String(Math.random()));
+
+    return { a, t };
+  }
 
   function getMixedActionsIncr(numTestActions) {
     const array1Incr = numTestActions;

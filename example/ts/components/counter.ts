@@ -23,9 +23,16 @@ type Tasks = Readonly<{
   ValidateCount: { count: number };
 }>;
 
+type Component = {
+  Props: Props;
+  State: State;
+  Actions: Actions;
+  Tasks: Tasks;
+};
 
-export default component<Props, State, Actions, Tasks>(
-  (action, task): Config<Props, State, Actions, Tasks> => ({
+
+export default component<Component>(
+  ({ action, task }): Config<Component> => ({
 
     // Initial state
     state: (props): State => ({

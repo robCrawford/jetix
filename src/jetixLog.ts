@@ -6,13 +6,14 @@ let groupId = '';
 const logEnabled = /[&?]debug/.test(window.location.search);
 
 export const log = ({
-  setStateGlobal(id: string, state: {}): void {
+  setStateGlobal(id: string, state: object | undefined): void {
     if (logEnabled) {
-      const global: { state: {} } = window as Window & typeof globalThis & { state: {} };
-      (global.state || (global.state = {}))[id] = state;
+      const win = window as unknown as { state: Record<string, object | undefined> };
+      const stateGlobal = win.state || (win.state = {});
+      stateGlobal[id] = state;
     }
   },
-  noInitialAction(id: string, state: {}): void {
+  noInitialAction(id: string, state?: {}): void {
     if (logEnabled) {
       console.group(`%c#${id}`, "color: #69f");
       if (state) {
@@ -21,7 +22,7 @@ export const log = ({
       groupId = id;
     }
   },
-  updateStart(id: string, state: {}, label: string, data?: {}): void {
+  updateStart(id: string, state: {} | undefined, label: string, data?: {}): void {
     if (logEnabled) {
       if (!groupId || groupId !== id) {
         console.group(`%c#${id}`, "color: #69f");
@@ -58,7 +59,7 @@ export const log = ({
       console.error(JSON.stringify(err));
     }
   },
-  render(id: string, props: {}): void {
+  render(id: string, props?: {}): void {
     if (logEnabled) {
       console.groupEnd();
       let msg = `⟳ Render #${id}`;
@@ -69,17 +70,10 @@ export const log = ({
       groupId = '';
     }
   },
-  noRender(id: string): void {
-    if (logEnabled) {
-      console.groupEnd();
-      const msg = `- #${id} has no changes`;
-      console.log(`%c${msg}`, "color: #888");
-      groupId = '';
-    }
-  },
   patch(): void {
     if (logEnabled) {
       console.log(`%c» PATCH`, "color: #888");
+      console.groupEnd();
     }
   },
   manualError(id: string, name: string): void {

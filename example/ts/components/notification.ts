@@ -14,9 +14,15 @@ type Actions = Readonly<{
   Dismiss: null;
 }>;
 
+type Component = {
+  Props: Props;
+  State: State;
+  Actions: Actions;
+};
 
-export default component<Props, State, Actions>(
-  (action): Config<Props, State, Actions> => ({
+
+export default component<Component>(
+  ({ action }): Config<Component> => ({
 
     state: (): State => ({
       show: true

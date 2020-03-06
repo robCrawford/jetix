@@ -45,9 +45,16 @@ type Tasks = Readonly<{
   ValidateCount: { count: number };
 }>;
 
+type Component = {
+  Props: Props;
+  State: State;
+  Actions: Actions;
+  Tasks: Tasks;
+};
 
-export default component<Props, State, Actions, Tasks>(
-  (action, task): Config<Props, State, Actions, Tasks> => ({
+
+export default component<Component>(
+  ({ action, task }): Config<Component> => ({
 
     // Initial state
     state: (props): State => ({
@@ -145,22 +152,27 @@ export default component<Props, State, Actions, Tasks>(
 import { component, html, mount, Config, Next, TaskSpec, VNode } from "jetix";
 const { div } = html;
 
-type Props = {};
-
-type State = {
+type State = Readonly<{
   message: string;
-};
+}>;
 
-type Actions = {
+type Actions = Readonly<{
   UpdateMessage: { message: string };
+}>;
+
+type Tasks = Readonly<{
+  SetDocTitle: { title: string };
+}>;
+
+type Component = {
+  State: State;
+  Actions: Actions;
+  Tasks: Tasks;
 };
 
-type Tasks = {
-  SetDocTitle: { title: string };
-}
 
-const app = component<Props, State, Actions, Tasks>(
-  (action, task): Config<Props, State, Actions, Tasks> => ({
+const app = component<Component>(
+  ({ action, task }): Config<Component> => ({
 
     state: (): State => ({ message: "" }),
 
@@ -170,7 +182,7 @@ const app = component<Props, State, Actions, Tasks>(
     ),
 
     actions: {
-      UpdateMessage: ({ message }, { props, state }): { state: State; next: Next } => {
+      UpdateMessage: ({ message }, { state }): { state: State; next: Next } => {
         return {
           state: {
             ...state,
@@ -182,14 +194,14 @@ const app = component<Props, State, Actions, Tasks>(
     },
 
     tasks: {
-      SetDocTitle: ({ title }): TaskSpec<Props, State> => ({
+      SetDocTitle: ({ title }): TaskSpec<null, State> => ({
         perform: (): void => {
           document.title = title;
         }
       })
     },
 
-    view(id, { props, state }): VNode {
+    view(id, { state }): VNode {
       return div(`#${id}-message`, state.message);
     }
 

@@ -9,11 +9,16 @@ export type RootProps = Readonly<{}>;
 export type RootState = Readonly<{
   theme: Theme;
   page?: Page;
+  likes: {
+    counterPage: number;
+    aboutPage: number;
+  };
 }>;
 
 export type RootActions = Readonly<{
   SetPage: { page: Page };
   SetTheme: { theme: Theme };
+  Like: { page: Page };
 }>;
 
 export type RootTasks = Readonly<{
@@ -22,15 +27,26 @@ export type RootTasks = Readonly<{
 
 export type Page = "counterPage" | "aboutPage";
 
-export type Theme = "default" | "dark";
+export type Theme = "light" | "dark";
+
+type Component = {
+  Props: RootProps;
+  State: RootState;
+  Actions: RootActions;
+  Tasks: RootTasks;
+};
 
 
-export default component<RootProps, RootState, RootActions, RootTasks>(
-  (action, task): Config<RootProps, RootState, RootActions, RootTasks> => ({
+export default component<Component>(
+  ({ action }): Config<Component> => ({
 
     state: (): RootState => ({
-      theme: "default",
-      page: null
+      theme: "light",
+      page: null,
+      likes: {
+        counterPage: 0,
+        aboutPage: 0
+      }
     }),
 
     // Root actions, import into any component
@@ -48,6 +64,17 @@ export default component<RootProps, RootState, RootActions, RootTasks>(
           state: {
             ...state,
             theme
+          }
+        };
+      },
+      Like: ({ page }, { state }): { state: RootState } => {
+        return {
+          state: {
+            ...state,
+            likes: {
+              ...state.likes,
+              [ page ]: state.likes[ page ] + 1
+            }
           }
         };
       }

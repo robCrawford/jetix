@@ -27,10 +27,9 @@
     "eslint": "^6.3.0",
     "jest": "^24.8.0",
     "ts-jest": "^24.0.2",
-    "typescript": "^3.6.2"
+    "typescript": "^3.8.3"
   },
   "dependencies": {
-    "fast-deep-equal": "^2.0.1",
     "hyperscript-helpers": "^3.0.3",
     "snabbdom": "^0.7.3"
   }

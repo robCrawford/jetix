@@ -1,11 +1,5 @@
 import { testComponent } from "jetix";
-import counter, { State } from "../ts/components/counter";
-
-const testCtx = {
-  props: {},
-  state: {},
-  rootState: {}
-};
+import counter, { State } from "./counter";
 
 const isArray = Array.isArray;
 
@@ -57,7 +51,7 @@ describe("Counter component", function(): void {
       // Task result actions
       const { success, failure } = getTask("ValidateCount", { count: 0 });
 
-      const successResult = success({ text: "Success test" }, testCtx);
+      const successResult = success({ text: "Success test" }, {});
       expect(isArray(successResult)).toBe(false);
 
       if (!isArray(successResult)) {
@@ -65,7 +59,7 @@ describe("Counter component", function(): void {
         expect(name).toBe("SetFeedback");
         expect(data).toEqual({ text: "Success test" });
 
-        const failureResult = failure("", testCtx);
+        const failureResult = failure("", {});
         expect(isArray(failureResult)).toBe(false);
 
         if (!isArray(failureResult)) {

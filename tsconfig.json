@@ -4,6 +4,7 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
+    "strict": true,
     "declaration": true,
     "esModuleInterop": true,
     "outDir": "./dist/"
@@ -14,5 +15,5 @@
   "exclude": [
     ".git",
     "node_modules"
-  ]
+  ],
 }

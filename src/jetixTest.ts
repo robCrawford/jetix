@@ -1,3 +1,5 @@
+import { Context, Dict } from "./jetix";
+
 /*
 API for unit testing Jetix components
 
@@ -12,13 +14,11 @@ const { state, next } = runAction("Increment", { step: 1 });
 const { success, failure } = getTask('ValidateCount', { count: 0 });
 const { name, data } = success('Test');
 */
-import { Context } from "./jetix";
-
 type ComponentTestApi = {
   config: {};
   initialState: {};
   runAction: <S>(name: string, data?: {}) => { state: S; next?: NextAsData | NextAsData[] };
-  getTask: (name: string, data?: {}) => TestTaskSpec<{}, {}>;
+  getTask: (name: string, data?: {}) => TestTaskSpec;
 };
 
 type NextAsData = {
@@ -26,18 +26,18 @@ type NextAsData = {
   data?: {};
 };
 
-type TestTaskSpec<P, S> = {
+type TestTaskSpec<P = Dict, S = Dict, RS = Dict> = {
   perform: () => Promise<{}> | void;
-  success?: (result: {}, ctx: Context<P, S>) => NextAsData | NextAsData[];
-  failure?: (error: {}, ctx: Context<P, S>) => NextAsData | NextAsData[];
+  success?: (result?: {}, ctx?: Context<P, S, RS>) => NextAsData | NextAsData[];
+  failure?: (error?: {}, ctx?: Context<P, S, RS>) => NextAsData | NextAsData[];
 };
 
 // Returns next action/task inputs as data
 const nextToData = (name: string, data?: {}): NextAsData => ({ name, data });
 
-export function testComponent(component, props): ComponentTestApi {
+export function testComponent(component: { getConfig: Function }, props: object): ComponentTestApi {
   // Initialise component passing in `nextToData()` instead of `action()` and `task()` functions
-  const config = component.getConfig(nextToData, nextToData);
+  const config = component.getConfig({ action: nextToData, task: nextToData });
   const initialState = config.state(props);
 
   return {
@@ -54,7 +54,7 @@ export function testComponent(component, props): ComponentTestApi {
     },
 
     // Get task spec for manually testing `success` and `failure` output
-    getTask(name: string, data?: {}): TestTaskSpec<{}, {}> {
+    getTask(name: string, data?: {}): TestTaskSpec {
       // Returns task spec
       return config.tasks[name](data);
     }

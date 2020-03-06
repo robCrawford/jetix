@@ -24,16 +24,23 @@ a {
 #theme-menu {
   margin: 22px -3px;
 }
-.intro {
+.content {
   margin: 20px 0;
   font-size: 14px;
 }
-.intro i {
+.content i {
   color: #888;
   line-height: 24px;
 }
-.page.dark .intro {
+.page.dark .content {
   color: #fff;
+}
+button.like {
+  margin: 0 2px;
+}
+.intro {
+  margin: 20px 0;
+  font-size: 14px;
 }
 .counter {
   display: inline-block;
@@ -109,4 +116,9 @@ a {
 }
 .debug #state {
   display: block;
+}
+.visits {
+  color: #888;
+  margin-left: 8px;
+  display: inline-block;
 }

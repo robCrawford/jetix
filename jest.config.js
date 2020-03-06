@@ -1,8 +1,13 @@
 module.exports = {
   "testMatch": [
-    "<rootDir>/test/*Spec.ts"
+    "<rootDir>/src/*.spec.ts"
   ],
   "transform": {
     "^.+\\.tsx?$": "ts-jest"
+  },
+  globals: {
+    'ts-jest': {
+      diagnostics: false
+    }
   }
 }

@@ -9,13 +9,14 @@ import sProps from "snabbdom/modules/props";
 import sEvents from "snabbdom/modules/eventlisteners";
 import hyperscriptHelpers from 'hyperscript-helpers';
 import { VNode } from "snabbdom/vnode";
+import { Hooks } from "snabbdom/hooks";
 export { VNode };
 
 export const patch = init([ sClass, sAttr, sProps, sEvents ]);
 
 export const html = hyperscriptHelpers(h);
 
-export function setHook(vnode: VNode, hookName: string, callback: () => void): void {
+export function setHook(vnode: VNode, hookName: keyof Hooks, callback: () => void): void {
   // https://github.com/snabbdom/snabbdom#hooks
   // init        a vnode has been added                                vnode
   // create      a DOM element has been created based on a vnode       emptyVnode, vnode

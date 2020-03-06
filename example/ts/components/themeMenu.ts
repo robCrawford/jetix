@@ -1,8 +1,12 @@
-import { component, rootAction, html, Config, VNode } from "jetix";
+import { component, html, Config, VNode } from "jetix";
+import { RootActions } from "../app";
 const { div, button } = html;
 
+type Component = {
+  RootActions: RootActions;
+};
 
-export default component((): Config => ({
+export default component<Component>(({ rootAction }): Config<Component> => ({
 
   view(id): VNode {
     return div(`#${id}`, [

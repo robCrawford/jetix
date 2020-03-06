@@ -2,7 +2,6 @@ import { patch, setHook, VNode } from "./vdom";
 export { html, VNode } from "./vdom";
 import { log } from "./jetixLog";
 export * from './jetixTest';
-import equal from 'fast-deep-equal';
 
 type ValueOf<T> = T[keyof T];
 
@@ -12,7 +11,7 @@ enum ThunkType {
 };
 
 export type ActionThunk = {
-  (data: {}): void | ActionThunk; // Returns another `ActionThunk` when currying
+  (data?: Dict): void | ActionThunk; // Returns another `ActionThunk` when currying
   type: ThunkType;
 }
 
@@ -21,60 +20,79 @@ export type GetActionThunk<A> = <K extends keyof A>(actionName: K, data?: A[K]) 
 export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
 export type TaskThunk = {
-  (data: {}): Promise<Next> | void;
+  (data?: Dict): Promise<Next> | void;
   type: ThunkType;
   taskName: string;
 };
 
 export type GetTaskThunk<T> = (taskName: keyof T, data?: ValueOf<T>) => TaskThunk;
 
-export type Next = ActionThunk | TaskThunk | (ActionThunk | TaskThunk)[];
+export type Next = undefined | ActionThunk | TaskThunk | (ActionThunk | TaskThunk)[];
 
-export type Context<P, S> = {
-  props: P;
-  state: S;
-  rootState: {};
+export type Context<P, S, RS> = {
+  props?: P;
+  state?: S;
+  rootState?: RS;
 };
 
-export type ActionHandler<D, P, S> = (
-  data: D,
-  ctx: Context<P, S>
+export type ActionHandler<D = Dict, P = Dict, S = Dict, RS = Dict> = (
+  data?: D,
+  ctx?: Context<P, S, RS>
 ) => { state: S; next?: Next };
 
-type TaskHandler<D, P, S> = (data: D) => TaskSpec<P, S>;
+type TaskHandler<D = Dict, P = Dict, S = Dict, RS = Dict> = (data?: D) => TaskSpec<P, S, RS>;
 
-export type TaskSpec<P, S> = {
-  perform: () => Promise<{}> | void;
-  success?: (result: {}, ctx: Context<P, S>) => Next;
-  failure?: (error: {}, ctx: Context<P, S>) => Next;
+export type TaskSpec<P = Dict, S = Dict, RS = Dict> = {
+  perform: () => Promise<Dict> | void;
+  success?: (result: {}, ctx: Context<P, S, RS>) => Next;
+  failure?: (error: {}, ctx: Context<P, S, RS>) => Next;
 };
 
-export type Config<P = {}, S = {}, A = {}, T = {}> = {
-  state?: (props: P) => S;
+type Component = {
+  Props?: Dict;
+  State?: Dict;
+  Actions?: Dict;
+  Tasks?: Dict;
+  RootState?: Dict;
+  RootActions?: Dict;
+  RootTasks?: Dict;
+};
+
+export type Config<C extends Component = Dict> = {
+  state?: (props?: C['Props']) => C['State'];
   init?: Next;
-  actions?: {[K in keyof A]: ActionHandler<A[K], P, S>};
-  tasks?: {[K in keyof T]: TaskHandler<T[K], P, S>};
-  view: (id: string, ctx: Context<P, S>) => VNode;
+  actions?: {[K in keyof C['Actions']]: ActionHandler<C['Actions'][K], C['Props'], C['State'], C['RootState']>};
+  tasks?: {[K in keyof C['Tasks']]: TaskHandler<C['Tasks'][K], C['Props'], C['State'], C['RootState']>};
+  view: (
+    id: string,
+    ctx: Context<C['Props'], C['State'], C['RootState']>
+  ) => VNode;
 };
 
-export type GetConfig<P, S, A, T> =
-  (action: GetActionThunk<A>, task: GetTaskThunk<T>) => Config<P, S, A, T>;
+export type GetConfig<C extends Component> = (fns: {
+  action: GetActionThunk<C['Actions']>;
+  task: GetTaskThunk<C['Tasks']>;
+  rootAction: GetActionThunk<C['RootActions']>;
+  rootTask: GetTaskThunk<C['RootTasks']>;
+}) => Config<C>;
 
-type RenderFn<T> = (props: T) => VNode | void;
+type RenderFn<P> = (props?: P) => VNode | void;
+
+export type Dict<T = {}> = Record<string, T>;
 
 
 // App state
-let renderRefs: { [id: string]: RenderFn<{}> } = {};
-let rootState: {} | undefined;
-let rootStateChanged = false;
-let prevProps: Record<string, {}> = {};
+let renderRefs: { [id: string]: RenderFn<Dict> } = {};
+let rootState: Dict | undefined;
+let prevProps: Record<string, Dict | undefined> = {};
 let renderIds: Record<string, boolean> = {};
 let renderRootId: string | undefined;
+let noRender = 0;
+let rootStateChanged = false;
 
 function resetAppState(): void {
   renderRefs = {};
   rootState = undefined;
-  rootStateChanged = false;
   prevProps = {};
   renderIds = {};
   renderRootId = undefined;
@@ -84,45 +102,45 @@ const appId = "app";
 let internalKey = {}; // Private unique value
 
 export const _setTestKey = <T>(k: T): T => internalKey = k; // For lib unit tests
-export let rootAction;
-export let rootTask;
+let rootAction: Function;
+let rootTask: Function;
 
-export function component<P = {}, S = {}, A = {}, T = {}>(
-  getConfig: GetConfig<P, S, A, T>
-): (idStr: string, props?: P) => VNode {
+export function component<C extends Component>(
+  getConfig: GetConfig<C>
+): { (idStr: string, props?: C['Props']): VNode; getConfig: Function } {
   // Pass in callback that returns component config
   // Returns render function that is called by parent e.g. `counter("counter-0", { start: 0 })`
-  const renderFn = (idStr: string, props?: P): VNode => {
+  const renderFn = (idStr: string, props?: C['Props']): VNode => {
     const id = (idStr || "").replace(/^#/, "");
-    if (!id.length || renderIds[id]) {
+    if (!id.length || (!noRender && renderIds[id])) {
       throw Error(`Component${id ? ` "${id}" ` : ' '}must have a unique id!`);
     }
     // Ids included in this render
     renderIds[id] = true;
-    return renderComponent<P, S, A, T>(id, props, getConfig);
+    return renderComponent<C>(id, getConfig, props);
   };
   // Add a handle to `getConfig` for tests
   renderFn.getConfig = getConfig;
   return renderFn;
 }
 
-export function renderComponent<P extends {}, S extends {}, A, T>(
+export function renderComponent<C extends Component>(
   id: string,
-  props: P,
-  getConfig: GetConfig<P, S, A, T>
+  getConfig: GetConfig<C>,
+  props?: C['Props']
 ): VNode {
   deepFreeze(props);
   const isRoot = id === appId;
 
   // If component already exists, just run render() again
-  let componentRoot = renderById(id, props);
-  if (componentRoot) {
-    return componentRoot;
+  const existingComponentRoot = renderById(id, props);
+  if (existingComponentRoot) {
+    return existingComponentRoot;
   }
 
-  const action: GetActionThunk<A> = (actionName, data): ActionThunk => {
-    const actionThunk = (thunkInput: ValueOf<A> | {}): void => {
-      if (isDomEvent(thunkInput)) {
+  const action: GetActionThunk<C['Actions']> = (actionName, data): ActionThunk => {
+    const actionThunk = (thunkInput?: ValueOf<C['Actions']> | object): void => {
+      if (isDomEvent(thunkInput as Dict)) {
         // Invoked from the DOM, `thunkInput` is the (unused) event
         update(actionName, data);
       }
@@ -134,7 +152,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
       else if (thunkInput) {
         // If a data argument is supplied, return a new thunk instead of invoking the current one
         // This enables currying e.g. when passing an action from parent to child via props
-        action(actionName, thunkInput as ValueOf<A>);
+        action(actionName, thunkInput as ValueOf<C['Actions']>);
       }
       else {
         log.manualError(id, String(actionName));
@@ -144,20 +162,23 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     return actionThunk;
   };
 
-  const task: GetTaskThunk<T> = (taskName, data): TaskThunk => {
+  const task: GetTaskThunk<C['Tasks']> = (taskName, data): TaskThunk => {
     if (!config.tasks) {
       throw Error(`tasks ${String(config.tasks)}`);
     }
     const performTask = (): Promise<Next> | void => {
-      const { perform, success, failure }: TaskSpec<P, S> = config.tasks[taskName](data);
-      const output = perform();
-      if (output && output.then) {
-        return output
-          .then((result: {}): Next => success(result, { props, state, rootState }))
-          .catch((err: {}): Next => failure(err, { props, state, rootState }));
+      const tasks = config.tasks;
+      if (tasks) {
+        const { perform, success, failure }: TaskSpec<C['Props'], C['State'], C['RootState']> = tasks[taskName](data);
+        const output = perform();
+        if (output && output.then) {
+          return output
+            .then((result: Dict): Next => success && success(result, { props, state, rootState }))
+            .catch((err: Dict): Next => failure && failure(err, { props, state, rootState }));
+        }
       }
     };
-    const taskThunk = (thunkInput: {}): Promise<Next> | void => {
+    const taskThunk = (thunkInput?: Dict): Promise<Next> | void => {
       if (isDomEvent(thunkInput)) {
         // Invoked from the DOM, `thunkInput` is the (unused) event
         const promise = performTask();
@@ -177,30 +198,37 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     return taskThunk;
   };
 
-  const config = getConfig(action, task);
+  const config = getConfig({
+    action,
+    task,
+    rootAction: rootAction as GetActionThunk<C['RootActions']>,
+    rootTask: rootTask as GetTaskThunk<C['RootTasks']>
+  });
   let state = config.state && config.state(props);
-  let noRender = 0;
-  let stateChanged = false;
 
-  function update(actionName: keyof A, data?: ValueOf<A>): void {
+  function update(actionName: keyof C['Actions'], data?: ValueOf<C['Actions']>): void {
     let next: Next;
     const prevState = deepFreeze(state);
     log.updateStart(id, prevState, String(actionName), data);
 
-    ({ state, next } = (config.actions[actionName] as ActionHandler<ValueOf<A>, P, S>)(
-      data, { props, state: prevState, rootState }
-    ));
-    // Action handlers return existing state by ref if no changes
-    stateChanged = prevState !== state;
-    if (isRoot) {
-      rootState = state;
-      rootStateChanged = stateChanged;
+    const actions = config.actions;
+    if (actions) {
+      ({ state, next } = (actions[actionName] as ActionHandler<ValueOf<C['Actions']>, C['Props'], C['State'], C['RootState']>)(
+        data, { props, state: prevState, rootState }
+      ));
+      if (isRoot) {
+        rootState = state;
+        // Action handlers return existing state by ref if no changes
+        if (prevState !== state) {
+          rootStateChanged = true;
+        }
+      }
+      log.updateEnd(state as Dict);
+      run(next, props, String(actionName));
     }
-    log.updateEnd(state);
-    run(next, props, String(actionName));
   }
 
-  function run(next: Next | undefined, props: P, prevTag?: string): void {
+  function run(next: Next | undefined, props?: C['Props'], prevTag?: string): void {
     if (!next) {
       render(props);
     }
@@ -232,14 +260,14 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
     }
   }
 
-  const isRenderRequired = (props: P): boolean => {
-    // `state`/`rootState` is the same ref when unchanged, `props` is always a new object so deep compare
-    return stateChanged || rootStateChanged || !equal(prevProps[id], props);
-  }
-
-  const render: RenderFn<P> = (props: P): VNode | void => {
+  const render: RenderFn<C['Props']> = (props?: C['Props']): VNode | void => {
     if (!noRender) {
-      if (isRenderRequired(props)) {
+      if (rootStateChanged) {
+        const rootRender = renderRefs[appId];
+        rootStateChanged = false;
+        rootRender && rootRender(prevProps[appId]);
+      }
+      else {
         let isRenderRoot = false;
         if (!renderRootId) {
           // The root component of this render
@@ -247,7 +275,7 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
           isRenderRoot = true;
         }
         const prevComponentRoot = componentRoot;
-        componentRoot = config.view(id, { props, state, rootState });
+        componentRoot = config.view( id, { props, state, rootState });
         log.render(id, props);
 
         if (isRenderRoot) {
@@ -256,19 +284,11 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
           renderRootId = undefined;
           renderIds = {};
         }
-        setRenderRef(componentRoot as VNode, id, render);
         log.setStateGlobal(id, state);
         if (isRenderRoot) {
           publish("patch");
         }
-      }
-      else {
-        log.noRender(id);
-      }
-      // Reset change flags
-      stateChanged = false;
-      if (isRoot) {
-        rootStateChanged = false;
+        setRenderRef(componentRoot as VNode, id, render as RenderFn<Dict>);
       }
     }
     prevProps[id] = props;
@@ -285,15 +305,15 @@ export function renderComponent<P extends {}, S extends {}, A, T>(
   }
 
   if (isRoot) {
-    rootAction = action as GetActionThunk<A>;
-    rootTask = task as GetTaskThunk<T>;
+    rootAction = action;
+    rootTask = task;
     rootState = state;
   }
 
   log.render(id, props);
-  componentRoot = config.view(id, { props, state, rootState });
+  let componentRoot = config.view(id, { props, state, rootState });
   prevProps[id] = props;
-  setRenderRef(componentRoot, id, render);
+  setRenderRef(componentRoot, id, render as RenderFn<Dict>);
   log.setStateGlobal(id, state);
 
   return componentRoot;
@@ -307,7 +327,7 @@ export function mount<A, P>({ app, props, init }: {
   resetAppState();
   // Mount the top-level app component
   patch(
-    document.getElementById(appId),
+    document.getElementById(appId) as Element,
     app(appId, props)
   );
   log.patch();
@@ -318,24 +338,24 @@ export function mount<A, P>({ app, props, init }: {
   // is provided by `mount` for wiring up events to root actions (e.g. routing)
   if (init) {
     const runRootAction: RunAction<A> = (actionName, data): void => {
-      rootAction(actionName, data)(internalKey);
+      rootAction(actionName as string, data)(internalKey);
     };
     init(runRootAction);
   }
 }
 
-function isDomEvent(e: {}): boolean {
-  return e && "eventPhase" in e;
+function isDomEvent(e?: Dict): boolean {
+  return Boolean(e && "eventPhase" in e);
 }
 
-function renderById(id: string, props: {}): VNode | void {
+function renderById(id: string, props?: Dict): VNode | void {
   const render = renderRefs[id];
   if (render) {
     return render(props);
   }
 }
 
-function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
+function setRenderRef(vnode: VNode, id: string, render: RenderFn<Dict>): void {
   renderRefs[id] = render;
   setHook(vnode, "destroy", (): void => {
     // Component not found in `renderIds` for this render
@@ -347,7 +367,7 @@ function setRenderRef(vnode: VNode, id: string, render: RenderFn<{}>): void {
   });
 }
 
-function deepFreeze<T>(o: T): T {
+function deepFreeze<T extends Dict>(o?: T): T | undefined {
   if (o) {
     Object.freeze(o);
     Object.getOwnPropertyNames(o).forEach((p: string): void => {
@@ -372,6 +392,6 @@ export function unsubscribe(type: string, listener: EventListener): void {
   document.removeEventListener(type, listener);
 }
 
-export function publish(type: string, detail?: {}): void {
-  document.dispatchEvent(new CustomEvent(type, detail ? { detail } : null));
+export function publish(type: string, detail?: Dict): void {
+  document.dispatchEvent(new CustomEvent(type, detail ? { detail } : undefined));
 }
