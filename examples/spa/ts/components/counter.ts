@@ -34,16 +34,13 @@ type Component = {
 export default component<Component>(
   ({ action, task }): Config<Component> => ({
 
-    // Initial state
     state: (props): State => ({
       counter: props.start,
       feedback: ""
     }),
 
-    // Initial action
     init: action("Validate"),
 
-    // Action handlers return new state, and any next actions/tasks
     actions: {
       Increment: ({ step }, { props, state, rootState }): { state: State; next: Next } => {
         return {
@@ -82,7 +79,6 @@ export default component<Component>(
       }
     },
 
-    // Task handlers provide callbacks for effects and async operations that may fail
     tasks: {
       ValidateCount: ({ count }): TaskSpec<Props, State> => {
         return {
@@ -97,7 +93,6 @@ export default component<Component>(
       }
     },
 
-    // View renders from props & state
     view(id, { props, state, rootState }): VNode {
       return div(`#${id}.counter`, [
         button(

@@ -26,8 +26,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "jetix": "^0.1.0",
-    "navigo": "^7.1.2"
+    "jetix": "^0.1.0"
   },
   "jest": {
     "testMatch": [

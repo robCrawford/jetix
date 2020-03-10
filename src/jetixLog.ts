@@ -56,7 +56,7 @@ export const log = ({
   taskFailure(id: string, label: string, err: Error): void {
     if (logEnabled) {
       console.log(`%c\n...#${id} task "${label}" failure`, "color: #dd8");
-      console.error(JSON.stringify(err));
+      if (err) console.error(JSON.stringify(err));
     }
   },
   render(id: string, props?: {}): void {

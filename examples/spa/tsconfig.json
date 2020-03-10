@@ -4,17 +4,15 @@
     "target": "es5",
     "module": "commonjs",
     "moduleResolution": "node",
-    "strict": true,
     "declaration": true,
     "esModuleInterop": true,
-    "removeComments": true,
     "outDir": "./dist/"
   },
   "include": [
-    "./src/jetix.ts"
+    "./ts/**/*"
   ],
   "exclude": [
     ".git",
     "node_modules"
-  ],
+  ]
 }

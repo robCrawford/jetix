@@ -43,9 +43,9 @@ export type ActionHandler<D = Dict, P = Dict, S = Dict, RS = Dict> = (
 type TaskHandler<D = Dict, P = Dict, S = Dict, RS = Dict> = (data?: D) => TaskSpec<P, S, RS>;
 
 export type TaskSpec<P = Dict, S = Dict, RS = Dict> = {
-  perform: () => Promise<Dict> | void;
-  success?: (result: {}, ctx: Context<P, S, RS>) => Next;
-  failure?: (error: {}, ctx: Context<P, S, RS>) => Next;
+  perform: () => Promise<{}> | {} | void;
+  success?: (result: {} | void, ctx: Context<P, S, RS>) => Next;
+  failure?: (error: {} | void, ctx: Context<P, S, RS>) => Next;
 };
 
 type Component = {
@@ -87,8 +87,6 @@ let rootState: Dict | undefined;
 let prevProps: Record<string, Dict | undefined> = {};
 let renderIds: Record<string, boolean> = {};
 let renderRootId: string | undefined;
-let noRender = 0;
-let rootStateChanged = false;
 
 function resetAppState(): void {
   renderRefs = {};
@@ -100,8 +98,10 @@ function resetAppState(): void {
 
 const appId = "app";
 let internalKey = {}; // Private unique value
-
-export const _setTestKey = <T>(k: T): T => internalKey = k; // For lib unit tests
+export const _setTestKey = // Set for tests
+  <T>(k: T): T => internalKey = k;
+let noRender = 0;
+let rootStateChanged = false;
 let rootAction: Function;
 let rootTask: Function;
 
@@ -171,10 +171,19 @@ export function renderComponent<C extends Component>(
       if (tasks) {
         const { perform, success, failure }: TaskSpec<C['Props'], C['State'], C['RootState']> = tasks[taskName](data);
         const output = perform();
-        if (output && output.then) {
+        if (isPromise(output)) {
           return output
-            .then((result: Dict): Next => success && success(result, { props, state, rootState }))
-            .catch((err: Dict): Next => failure && failure(err, { props, state, rootState }));
+            .then((result: Dict): Next => {
+              log.taskSuccess(id, String(taskName));
+              return success && success(result, { props, state, rootState });
+            })
+            .catch((err: Error): Next => {
+              log.taskFailure(id, String(taskName), err);
+              return failure && failure(err, { props, state, rootState })
+            });
+        }
+        else if (success) {
+          return Promise.resolve(success(output, { props, state, rootState }));
         }
       }
     };
@@ -183,7 +192,7 @@ export function renderComponent<C extends Component>(
         // Invoked from the DOM, `thunkInput` is the (unused) event
         const promise = performTask();
         if (promise && promise.then) {
-          promise.then((next: Next): void => run(next, props));
+          promise.then((next?: Next): void => run(next, props));
         }
       }
       else if (thunkInput === internalKey) {
@@ -246,16 +255,12 @@ export function renderComponent<C extends Component>(
     else if ((next as TaskThunk).type === ThunkType.Task) {
       const result = (next as TaskThunk)(internalKey);
       const taskName = (next as TaskThunk).taskName;
-      const isPromise = Boolean(result && result.then);
-      if (isPromise) {
-        (result as Promise<Next>)
-          .then((n: Next): void => {
-            log.taskSuccess(id, String(taskName));
-            run(n, props, prevTag);
-          })
-          .catch((e: Error): void => log.taskFailure(id, String(taskName), e));
+      if (isPromise(result)) {
+        result.then((n: Next): void => {
+          run(n, props, prevTag);
+        })
       }
-      log.taskPerform(String(taskName), isPromise);
+      log.taskPerform(String(taskName), isPromise(result));
       render(props); // End of sync chain
     }
   }
@@ -365,6 +370,10 @@ function setRenderRef(vnode: VNode, id: string, render: RenderFn<Dict>): void {
       log.setStateGlobal(id, undefined);
     }
   });
+}
+
+function isPromise<T>(o: Promise<T> | {} | void): o is Promise<T> {
+  return Boolean(o && (o as Promise<{}>).then);
 }
 
 function deepFreeze<T extends Dict>(o?: T): T | undefined {
