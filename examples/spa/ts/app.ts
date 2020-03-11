@@ -1,4 +1,4 @@
-import { component, html, Config, VNode, TaskSpec } from "jetix";
+import { component, html, Config, VNode, Task } from "jetix";
 import counterPage from "./pages/counterPage";
 import aboutPage from "./pages/aboutPage";
 import "./router";
@@ -38,7 +38,7 @@ type Component = {
 
 
 export default component<Component>(
-  ({ action }): Config<Component> => ({
+  (): Config<Component> => ({
 
     state: (): RootState => ({
       theme: "light",
@@ -83,7 +83,7 @@ export default component<Component>(
     // Root tasks, import into any component
     tasks: {
       // Demonstrates a task that is only an effect
-      SetDocTitle: ({ title }): TaskSpec<RootProps, RootState> => ({
+      SetDocTitle: ({ title }): Task<RootProps, RootState> => ({
         perform: (): void => {
           document.title = title;
         }
@@ -95,10 +95,10 @@ export default component<Component>(
         ((): VNode => {
           switch (state.page) {
             case "aboutPage":
-              return aboutPage("#about-page", { onSetTheme: action("SetTheme") });
+              return aboutPage("#about-page");
 
             case "counterPage":
-              return counterPage("#counter-page", { onSetTheme: action("SetTheme") });
+              return counterPage("#counter-page");
           }
         })()
       );

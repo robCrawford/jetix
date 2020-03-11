@@ -1,19 +1,19 @@
-import { Context, Dict, Next } from "./jetix";
-
 /*
 API for unit testing Jetix components
 
 - Initialise component test API
-import counter from "../ts/components/counter";
-const { config, initialState, action, task } = testComponent(counter, { start: 0 });
+import counter from "./counter";
+const { initialState, action, task, config } = testComponent(counter, { start: 0 });
 
 - Run an action to inspect result `state` and `next` as data
 const { state, next } = action("Increment", { step: 1 });
 
 - Get a task to invoke `success` and `failure` callbacks
-const { success, failure } = task('ValidateCount', { count: 0 });
-const { name, data } = success('Test');
+const { perform, success, failure } = task("ValidateCount", { count: 0 });
+const { name, data } = success({ text: "Test" });
 */
+import { Context, Dict, Next } from "./jetix";
+
 type ComponentTestApi = {
   config: {
     state?: Function;
@@ -23,28 +23,33 @@ type ComponentTestApi = {
     view: Function;
   };
   initialState: Dict;
-  action: <S>(name: string, data?: {}) => { state: S; next?: NextAsData | NextAsData[] };
+  action: <S>(name: string, data?: {}) => { state: S; next?: NextData | NextData[] };
   task: (name: string, data?: {}) => TestTaskSpec;
 };
 
-type NextAsData = {
+export type NextData = {
   name: string;
   data?: Dict;
 };
 
 type TestTaskSpec<P = Dict, S = Dict, RS = Dict> = {
   perform: () => Promise<{}> | void;
-  success?: (result?: {}, ctx?: Context<P, S, RS>) => NextAsData | NextAsData[];
-  failure?: (error?: {}, ctx?: Context<P, S, RS>) => NextAsData | NextAsData[];
+  success?: (result?: {}, ctx?: Context<P, S, RS>) => NextData | NextData[];
+  failure?: (error?: {}, ctx?: Context<P, S, RS>) => NextData | NextData[];
 };
 
 // Returns next action/task inputs as data
-const nextToData = (name: string, data?: {}): NextAsData => ({ name, data });
+const nextToData = (name: string, data?: {}): NextData => ({ name, data });
 
 export function testComponent(component: { getConfig: Function }, props?: object): ComponentTestApi {
   // Initialise component passing in `nextToData()` instead of `action()` and `task()` functions
-  const config = component.getConfig({ action: nextToData, task: nextToData });
-  const initialState = config.state(props);
+  const config = component.getConfig({
+    action: nextToData,
+    task: nextToData,
+    rootAction: nextToData,
+    rootTask: nextToData
+  });
+  const initialState = config.state && config.state(props);
 
   return {
     // Output from the callback passed into `component(...)`
@@ -54,7 +59,7 @@ export function testComponent(component: { getConfig: Function }, props?: object
     initialState,
 
     // Run an action
-    action<S>(name: string, data?: {}): { state: S; next?: NextAsData } {
+    action<S>(name: string, data?: {}): { state: S; next?: NextData } {
       // Returns any next operations as data
       return config.actions[name](data, { props, state: initialState });
     },

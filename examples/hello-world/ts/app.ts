@@ -1,22 +1,22 @@
-import { component, html, mount, Config, Next, TaskSpec, VNode } from "jetix";
+import { component, html, mount, Config, Next, Task, VNode } from "jetix";
 import { setDocTitle} from "../services/browser";
 const { div } = html;
 
 export type State = Readonly<{
-  message: string;
-  ready: boolean;
+  text: string;
+  done: boolean;
 }>;
 
 export type Actions = Readonly<{
-  UpdateMessage: { message: string };
-  UpdateStatus: { ready: boolean };
+  ShowMessage: { text: string };
+  PageReady: { done: boolean };
 }>;
 
 export type Tasks = Readonly<{
   SetDocTitle: { title: string };
 }>;
 
-export type Component = {
+type Component = {
   State: State;
   Actions: Actions;
   Tasks: Tasks;
@@ -27,46 +27,46 @@ const app = component<Component>(
   ({ action, task }): Config<Component> => ({
 
     // Initial state
-    state: (): State => ({ message: "", ready: false }),
+    state: (): State => ({
+      text: "",
+      done: false
+    }),
 
     // Initial action
-    init: action("UpdateMessage", { message: "Hello World!" }),
+    init: action(
+      "ShowMessage",
+      { text: "Hello World!" }
+    ),
 
     // Action handlers return new state, and any next actions/tasks
     actions: {
-      UpdateMessage: ({ message }, { state }): { state: State; next: Next } => {
+      ShowMessage: ({ text }, { state }): { state: State; next: Next } => {
         return {
-          state: {
-            ...state,
-            message
-          },
-          next: task("SetDocTitle", { title: message })
+          state: { ...state, text },
+          next: task("SetDocTitle", { title: text })
         };
       },
-      UpdateStatus: ({ ready }, { state }): { state: State } => {
+      PageReady: ({ done }, { state }): { state: State } => {
         return {
-          state: {
-            ...state,
-            ready
-          }
+          state: { ...state, done }
         };
       },
     },
 
     // Task handlers provide callbacks for effects and async operations that may fail
     tasks: {
-      SetDocTitle: ({ title }): TaskSpec<null, State> => ({
+      SetDocTitle: ({ title }): Task<null, State> => ({
         perform: (): Promise<void> => setDocTitle(title),
-        success: (): Next => action("UpdateStatus", { ready: true }),
-        failure: (): Next => action("UpdateStatus", { ready: false })
+        success: (): Next => action("PageReady", { done: true }),
+        failure: (): Next => action("PageReady", { done: false })
       })
     },
 
     // View renders from props & state
     view(id, { state }): VNode {
       return div(`#${id}-message`, [
-        div(state.message),
-        div(state.ready ? '✅' : '❎')
+        div(state.text),
+        div(state.done ? '✅' : '❎')
       ]);
     }
 

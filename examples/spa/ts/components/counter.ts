@@ -1,4 +1,4 @@
-import { component, html, Config, VNode, Next, TaskSpec } from "jetix";
+import { component, html, Config, VNode, Next, Task } from "jetix";
 import notification from "./notification";
 import { validateCount } from "../services/validation";
 const { div, button } = html;
@@ -80,7 +80,7 @@ export default component<Component>(
     },
 
     tasks: {
-      ValidateCount: ({ count }): TaskSpec<Props, State> => {
+      ValidateCount: ({ count }): Task<Props, State> => {
         return {
           perform: (): Promise<{ text: string }> => validateCount(count),
           success: (result: { text: string }, { props, state, rootState }): Next => {

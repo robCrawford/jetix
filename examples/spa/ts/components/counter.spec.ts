@@ -1,83 +1,106 @@
-import { testComponent } from "jetix";
+import { testComponent, NextData } from "jetix";
 import counter, { State } from "./counter";
 
-const isArray = Array.isArray;
+describe("Counter component", () => {
+  const { initialState, action, task, config } = testComponent(counter, { start: 0 });
 
-describe("Counter component", function(): void {
+  it("should set initial state", () => {
+    expect(initialState).toEqual({ counter: 0, feedback: "" });
+  });
 
-  it("should increment counter and return 'Validate' for 'Increment' action", function(): void {
-    const { action } = testComponent(counter, { start: 0 });
+  it("should run initial action", () => {
+    expect(config.init).toEqual({ name: "Validate" });
+  });
+
+  describe("'Increment' action", () => {
     const { state, next } = action<State>("Increment", { step: 1 });
-    expect(isArray(next)).toBe(false);
 
-    if (!isArray(next)) {
-      expect(state.counter).toBe(1);
-      expect(next.name).toBe("Validate");
-      expect(next.data).toBe(undefined);
-    }
+    it("should update state", () => {
+      expect(state).toEqual({
+        ...initialState,
+        counter: 1
+      });
+    });
+
+    it("should return next", () => {
+      const { name, data } = next as NextData;
+      expect(name).toBe("Validate");
+      expect(data).toBeUndefined();
+    });
   });
 
-  it("should decrement counter and return 'Validate' for 'Decrement' action", function(): void {
-    const { action } = testComponent(counter, { start: 0 });
+  describe("'Decrement' action", () => {
     const { state, next } = action<State>("Decrement", { step: 1 });
-    expect(isArray(next)).toBe(false);
 
-    if (!isArray(next)) {
-      expect(state.counter).toBe(-1);
-      expect(next.name).toBe("Validate");
-      expect(next.data).toBe(undefined);
-    }
+    it("should update state", () => {
+      expect(state).toEqual({
+        ...initialState,
+        counter: -1
+      });
+    });
+
+    it("should return next", () => {
+      const { name, data } = next as NextData;
+      expect(name).toBe("Validate");
+      expect(data).toBeUndefined();
+    });
   });
 
-  it("should return correct actions for 'Validate' action", function(): void {
-    const { initialState, action, task } = testComponent(counter, { start: 0 });
-
+  describe("'Validate' action", () => {
     const { state, next } = action<State>("Validate");
-    expect(JSON.stringify(state)).toEqual(JSON.stringify(initialState));
-    expect(isArray(next)).toBe(true);
 
-    if (isArray(next)) {
-      expect(isArray(next)).toBe(true);
-      expect(next.length).toBe(2);
+    it("should not update state", () => {
+      expect(state).toEqual(initialState);
+    });
 
-      // Action
-      expect(next[0].name).toBe("SetFeedback");
-      expect(next[0].data).toEqual({ text: "Validating..." });
+    it("should return next", () => {
+      expect(Array.isArray(next)).toBe(true);
 
-      // Task
-      expect(next[1].name).toBe("ValidateCount");
-      expect(next[1].data).toEqual({ count: 0 });
+      if (Array.isArray(next)) {
+        expect(next.length).toBe(2);
 
-      // Task result actions
-      const { success, failure } = task("ValidateCount", { count: 0 });
+        expect(next[0].name).toBe("SetFeedback");
+        expect(next[0].data).toEqual({ text: "Validating..." });
 
-      const successResult = success({ text: "Success test" }, {});
-      expect(isArray(successResult)).toBe(false);
-
-      if (!isArray(successResult)) {
-        let { name, data } = successResult;
-        expect(name).toBe("SetFeedback");
-        expect(data).toEqual({ text: "Success test" });
-
-        const failureResult = failure("", {});
-        expect(isArray(failureResult)).toBe(false);
-
-        if (!isArray(failureResult)) {
-          ({ name, data } = failureResult);
-          expect(name).toBe('SetFeedback');
-          expect(data).toEqual({ text: 'Unavailable' });
-        }
+        expect(next[1].name).toBe("ValidateCount");
+        expect(next[1].data).toEqual({ count: 0 });
       }
-    }
+    });
   });
 
-  it("should update state with no return action for 'SetFeedback' action", function(): void {
-    const { action } = testComponent(counter, { start: 0 });
-    const testStr = "test feedback";
-    const { state, next } = action<State>("SetFeedback", { text: testStr });
+  describe("'SetFeedback' action", () => {
+    const { state, next } = action<State>("SetFeedback", { text: 'test' });
 
-    expect(state.feedback).toBe(testStr);
-    expect(next).toBe(undefined);
+    it("should update state", () => {
+      expect(state).toEqual({
+        ...initialState,
+        feedback: "test"
+      });
+    });
+
+    it("should not return next", () => {
+      expect(next).toBeUndefined();
+    });
+  });
+
+  describe("'ValidateCount' task", () => {
+    const { perform, success, failure } = task("ValidateCount", { count: 0 });
+
+    it("should provide perform", () => {
+      expect(perform).toBeDefined();
+    });
+
+    it("should handle success", () => {
+      const { name, data } = success({ text: "Success test" }, {}) as NextData;
+      expect(name).toBe("SetFeedback");
+      expect(data).toEqual({ text: "Success test" });
+    });
+
+    it("should handle failure", () => {
+      const { name, data } = failure("", {}) as NextData;
+      expect(name).toBe('SetFeedback');
+      expect(data).toEqual({ text: 'Unavailable' });
+    });
   });
 
 });

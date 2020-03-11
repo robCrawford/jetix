@@ -1,4 +1,4 @@
-import { testComponent } from "jetix";
+import { testComponent, NextData } from "jetix";
 import app, { State } from "./app";
 
 describe("App", () => {
@@ -6,47 +6,51 @@ describe("App", () => {
   const { action, task, config, initialState } = testComponent(app);
 
   it("should set initial state", () => {
-    expect(initialState).toEqual({ message: "", ready: false });
+    expect(initialState).toEqual({ text: "", done: false });
   });
 
-  it("should initialize", () => {
+  it("should run initial action", () => {
     expect(config.init).toEqual({
-      name: "UpdateMessage",
-      data: { message: "Hello World!" }
+      name: "ShowMessage",
+      data: { text: "Hello World!" }
     });
   });
 
-  it("should handle 'UpdateMessage' action", () => {
-    const { state, next } = action<State>(
-      "UpdateMessage",
-      { message: "Hello World!"}
-    );
-    expect(state.message).toEqual("Hello World!");
-    expect(Array.isArray(next)).toBe(false);
+  describe("'ShowMessage' action", () => {
+    const { state, next } = action<State>("ShowMessage", { text: "Hello World!"});
 
-    if (!Array.isArray(next)) {
-      expect(next.name).toBe("SetDocTitle");
-      expect(next.data).toEqual({ title: "Hello World!" });
-    }
+    it("should update state", () => {
+      expect(state).toEqual({
+        ...initialState,
+        text: "Hello World!"
+      });
+    });
+
+    it("should return next", () => {
+      const { name, data } = next as NextData;
+      expect(name).toBe("SetDocTitle");
+      expect(data).toEqual({ title: "Hello World!" });
+    });
   });
 
-  it("should handle 'SetDocTitle' task", () => {
+  describe("'SetDocTitle' task", () => {
     const { perform, success, failure } = task("SetDocTitle", { title: "test" });
-    expect(perform).toBeDefined;
 
-    const successResult = success();
-    expect(Array.isArray(successResult)).toBe(false);
-    if (!Array.isArray(successResult)) {
-      expect(successResult.name).toBe("UpdateStatus");
-      expect(successResult.data).toEqual({ ready: true });
-    }
+    it("should provide perform", () => {
+      expect(perform).toBeDefined();
+    });
 
-    const failureResult = failure();
-    expect(Array.isArray(failureResult)).toBe(false);
-    if (!Array.isArray(failureResult)) {
-      expect(failureResult.name).toBe("UpdateStatus");
-      expect(failureResult.data).toEqual({ ready: false });
-    }
-  })
+    it("should handle success", () => {
+      const { name, data } = success() as NextData;
+      expect(name).toBe("PageReady");
+      expect(data).toEqual({ done: true });
+    });
+
+    it("should handle failure", () => {
+      const { name, data } = failure() as NextData;
+      expect(name).toBe("PageReady");
+      expect(data).toEqual({ done: false });
+    });
+  });
 
 });

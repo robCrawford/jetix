@@ -40,9 +40,9 @@ export type ActionHandler<D = Dict, P = Dict, S = Dict, RS = Dict> = (
   ctx?: Context<P, S, RS>
 ) => { state: S; next?: Next };
 
-type TaskHandler<D = Dict, P = Dict, S = Dict, RS = Dict> = (data?: D) => TaskSpec<P, S, RS>;
+type TaskHandler<D = Dict, P = Dict, S = Dict, RS = Dict> = (data?: D) => Task<P, S, RS>;
 
-export type TaskSpec<P = Dict, S = Dict, RS = Dict> = {
+export type Task<P = Dict, S = Dict, RS = Dict> = {
   perform: () => Promise<{}> | {} | void;
   success?: (result: {} | void, ctx: Context<P, S, RS>) => Next;
   failure?: (error: {} | void, ctx: Context<P, S, RS>) => Next;
@@ -169,7 +169,7 @@ export function renderComponent<C extends Component>(
     const performTask = (): Promise<Next> | void => {
       const tasks = config.tasks;
       if (tasks) {
-        const { perform, success, failure }: TaskSpec<C['Props'], C['State'], C['RootState']> = tasks[taskName](data);
+        const { perform, success, failure }: Task<C['Props'], C['State'], C['RootState']> = tasks[taskName](data);
         const output = perform();
         if (isPromise(output)) {
           return output
