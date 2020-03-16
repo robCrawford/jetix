@@ -1,6 +1,6 @@
 {
   "name": "jetix",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "description": "Type-safe HyperScript components using pure functions.",
   "main": "dist/jetix.js",
   "types": "dist/jetix.d.ts",
