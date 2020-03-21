@@ -2,6 +2,10 @@ import { component, html, mount, Config, Next, Task, VNode } from "jetix";
 import { setDocTitle} from "../services/browser";
 const { div } = html;
 
+export type Props = Readonly<{
+  placeholder: string;
+}>;
+
 export type State = Readonly<{
   text: string;
   done: boolean;
@@ -17,6 +21,7 @@ export type Tasks = Readonly<{
 }>;
 
 type Component = {
+  Props: Props;
   State: State;
   Actions: Actions;
   Tasks: Tasks;
@@ -27,8 +32,8 @@ const app = component<Component>(
   ({ action, task }): Config<Component> => ({
 
     // Initial state
-    state: (): State => ({
-      text: "",
+    state: ({ placeholder }): State => ({
+      text: placeholder,
       done: false
     }),
 
@@ -75,7 +80,7 @@ const app = component<Component>(
 
 document.addEventListener(
   "DOMContentLoaded",
-  (): void => mount({ app, props: {} })
+  (): void => mount({ app, props: { placeholder: "Loading" } })
 );
 
 export default app;

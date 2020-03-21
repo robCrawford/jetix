@@ -10,15 +10,15 @@ Minimal wiring for TypeScript components made of pure functions.
 
 Also contains lightweight prevention of anti-patterns like state mutation and manually calling declarative actions.
 
-## Examples:
+### Examples:
 - [Single page app demo](http://robcrawford.github.io/demos/jetix/spa?debug) *[[ source ]](https://github.com/robCrawford/jetix/tree/master/examples/spa)*
 - Hello World *[[ source ]](https://github.com/robCrawford/jetix/tree/master/examples/hello-world)*
 
 ------------------------
 
-## Syntax:
+## Components
 
-### `component( callback )`
+### `component(callback)`
 The `component` callback receives an object exposing `action`, `task`, `rootAction` and `rootTask` functions.
 
 ```JavaScript
@@ -47,6 +47,10 @@ import { component, html, mount, Config, Next, Task, VNode } from "jetix";
 import { setDocTitle} from "../services/browser";
 const { div } = html;
 
+export type Props = Readonly<{
+  placeholder: string;
+}>;
+
 export type State = Readonly<{
   text: string;
   done: boolean;
@@ -62,6 +66,7 @@ export type Tasks = Readonly<{
 }>;
 
 type Component = {
+  Props: Props;
   State: State;
   Actions: Actions;
   Tasks: Tasks;
@@ -72,8 +77,8 @@ const app = component<Component>(
   ({ action, task }): Config<Component> => ({
 
     // Initial state
-    state: (): State => ({
-      text: "",
+    state: ({ placeholder }): State => ({
+      text: placeholder,
       done: false
     }),
 
@@ -120,13 +125,11 @@ const app = component<Component>(
 
 document.addEventListener(
   "DOMContentLoaded",
-  (): void => mount({ app, props: {} })
+  (): void => mount({ app, props: { placeholder: "Loading" } })
 );
 
 export default app;
 ```
-
-------------------------
 
 ## Unit tests
 
@@ -138,10 +141,10 @@ import app, { State } from "./app";
 
 describe("App", () => {
 
-  const { action, task, config, initialState } = testComponent(app);
+  const { action, task, config, initialState } = testComponent(app, { placeholder: "placeholder" });
 
   it("should set initial state", () => {
-    expect(initialState).toEqual({ text: "", done: false });
+    expect(initialState).toEqual({ text: "placeholder", done: false });
   });
 
   it("should run initial action", () => {

@@ -3,10 +3,10 @@ import app, { State } from "./app";
 
 describe("App", () => {
 
-  const { action, task, config, initialState } = testComponent(app);
+  const { action, task, config, initialState } = testComponent(app, { placeholder: "placeholder" });
 
   it("should set initial state", () => {
-    expect(initialState).toEqual({ text: "", done: false });
+    expect(initialState).toEqual({ text: "placeholder", done: false });
   });
 
   it("should run initial action", () => {
