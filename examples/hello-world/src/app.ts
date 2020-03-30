@@ -1,5 +1,5 @@
 import { component, html, mount, Config, Next, Task, VNode } from "jetix";
-import { setDocTitle} from "../services/browser";
+import { setDocTitle} from "./services/browser";
 const { div } = html;
 
 export type Props = Readonly<{

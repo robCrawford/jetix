@@ -2,7 +2,7 @@
   "name": "jetix-example-app",
   "version": "0.1.0",
   "description": "Jetix example app",
-  "main": "src/ts/app.js",
+  "main": "src/app.js",
   "scripts": {
     "dev": "parcel serve ./index.html",
     "build": "rm -rf ./dist && cross-env NODE_ENV=production parcel build ./index.html --public-url .",
@@ -15,22 +15,17 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^24.0.15",
-    "@typescript-eslint/eslint-plugin": "^2.0.0",
-    "@typescript-eslint/parser": "^2.0.0",
-    "cross-env": "^5.2.0",
-    "eslint": "^6.3.0",
-    "jest": "^24.8.0",
-    "parcel-bundler": "^1.12.3",
-    "ts-jest": "^24.0.2",
+    "@types/jest": "^25.1.4",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "cross-env": "^7.0.2",
+    "eslint": "^6.8.0",
+    "jest": "^25.2.4",
+    "parcel-bundler": "^1.12.4",
+    "ts-jest": "^25.3.0",
     "typescript": "^3.8.3"
   },
   "dependencies": {
     "jetix": "^0.1.0"
-  },
-  "jest": {
-    "testMatch": [
-      "test/*"
-    ]
   }
 }
