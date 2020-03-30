@@ -21,16 +21,16 @@
     "virtual dom"
   ],
   "devDependencies": {
-    "@types/jest": "^24.0.15",
-    "@typescript-eslint/eslint-plugin": "^2.0.0",
-    "@typescript-eslint/parser": "^2.0.0",
-    "eslint": "^6.3.0",
-    "jest": "^24.8.0",
-    "ts-jest": "^24.0.2",
+    "@types/jest": "^25.1.4",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "eslint": "^6.8.0",
+    "jest": "^25.2.4",
+    "ts-jest": "^25.3.0",
     "typescript": "^3.8.3"
   },
   "dependencies": {
     "hyperscript-helpers": "^3.0.3",
-    "snabbdom": "^0.7.3"
+    "snabbdom": "^0.7.4"
   }
 }
