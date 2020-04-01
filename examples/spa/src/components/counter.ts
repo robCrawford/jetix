@@ -71,7 +71,7 @@ export default component<Component>(
       },
       SetFeedback: ({ text }, { props, state, rootState }): { state: State } => {
         return {
-          state: {
+          state: text === state.feedback ? state : {
             ...state,
             feedback: text
           }

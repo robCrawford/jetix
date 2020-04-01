@@ -102,6 +102,7 @@ export const _setTestKey = // Set for tests
   <T>(k: T): T => internalKey = k;
 let noRender = 0;
 let rootStateChanged = false;
+let stateChanged = false;
 let rootAction: Function;
 let rootTask: Function;
 
@@ -218,21 +219,23 @@ export function renderComponent<C extends Component>(
   function update(actionName: keyof C['Actions'], data?: ValueOf<C['Actions']>): void {
     let next: Next;
     const prevState = deepFreeze(state);
-    log.updateStart(id, prevState, String(actionName), data);
-
     const actions = config.actions;
+
     if (actions) {
       ({ state, next } = (actions[actionName] as ActionHandler<ValueOf<C['Actions']>, C['Props'], C['State'], C['RootState']>)(
         data, { props, state: prevState, rootState }
       ));
+
+      // Action handlers should return existing state by ref if no changes
+      const currStateChanged = state !== prevState;
+      stateChanged = stateChanged || currStateChanged;
+      log.updateStart(id, currStateChanged && prevState, String(actionName), data);
+
       if (isRoot) {
         rootState = state;
-        // Action handlers return existing state by ref if no changes
-        if (prevState !== state) {
-          rootStateChanged = true;
-        }
+        rootStateChanged = currStateChanged;
       }
-      log.updateEnd(state as Dict);
+      log.updateEnd(currStateChanged && state as Dict);
       run(next, props, String(actionName));
     }
   }
@@ -272,7 +275,7 @@ export function renderComponent<C extends Component>(
         rootStateChanged = false;
         rootRender && rootRender(prevProps[appId]);
       }
-      else {
+      else if (stateChanged) {
         let isRenderRoot = false;
         if (!renderRootId) {
           // The root component of this render
@@ -286,6 +289,7 @@ export function renderComponent<C extends Component>(
         if (isRenderRoot) {
           patch(prevComponentRoot as VNode, componentRoot);
           log.patch();
+          stateChanged = false;
           renderRootId = undefined;
           renderIds = {};
         }

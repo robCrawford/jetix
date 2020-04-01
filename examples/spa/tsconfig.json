@@ -6,10 +6,10 @@
     "moduleResolution": "node",
     "declaration": true,
     "esModuleInterop": true,
-    "outDir": "./dist/"
+    "noEmit": true
   },
   "include": [
-    "./ts/**/*"
+    "./src/**/*"
   ],
   "exclude": [
     ".git",

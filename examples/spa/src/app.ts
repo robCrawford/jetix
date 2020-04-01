@@ -53,7 +53,7 @@ export default component<Component>(
     actions: {
       SetPage: ({ page }, { state }): { state: RootState } => {
         return {
-          state: {
+          state: page === state.page ? state : {
             ...state,
             page
           }
@@ -61,7 +61,7 @@ export default component<Component>(
       },
       SetTheme: ({ theme }, { state }): { state: RootState } => {
         return {
-          state: {
+          state: theme === state.theme ? state : {
             ...state,
             theme
           }

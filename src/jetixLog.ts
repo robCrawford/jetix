@@ -26,16 +26,19 @@ export const log = ({
     if (logEnabled) {
       if (!groupId || groupId !== id) {
         console.group(`%c#${id}`, "color: #69f");
-        if (state) {
-          console.log(`%c${JSON.stringify(state)}`, "text-decoration: line-through;");
-        }
         groupId = id;
+      }
+      if (state) {
+        console.log(`%c${JSON.stringify(state)}`, "text-decoration: line-through;");
       }
       let msg = `${String(label)}`;
       if (data) {
         msg += ` ${JSON.stringify(data)}`;
       }
       console.log(`%c${msg}`, "color: #f6b");
+      if (!state) {
+        console.log(`No change`);
+      }
     }
   },
   updateEnd(state: {}): void {
