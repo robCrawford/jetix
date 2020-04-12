@@ -5,7 +5,7 @@ const { div } = html;
 const patchSpy = jest.spyOn(vdom, "patch");
 const testKey = _setTestKey({});
 
-describe("Jetix", function() {
+describe("Jetix", () => {
   let state, action;
   let componentId = 0;
   const getId = () => `_${componentId++}`;
@@ -15,11 +15,11 @@ describe("Jetix", function() {
     return div("Test");
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     patchSpy.mockClear();
   });
 
-  it("should patch once following a chain of actions", function() {
+  it("should patch once following a chain of actions", () => {
     const numTestActions = 20;
 
     renderComponent(getId(), ({ action: a }) => {
@@ -55,7 +55,7 @@ describe("Jetix", function() {
     expect(patchSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("should patch once following an array of actions", function() {
+  it("should patch once following an array of actions", () => {
     const numTestActions = 20;
 
     renderComponent(getId(), ({ action: a }) => {
@@ -89,14 +89,14 @@ describe("Jetix", function() {
     expect(patchSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("should patch twice when a chain of actions contains a promise", function(done) {
+  it("should patch twice when a chain of actions contains a promise", done => {
     const numTestActions = 20;
     runActionsWithPromise(numTestActions, 2, done);
     expect(patchSpy).not.toHaveBeenCalled();
     action("Increment1")(testKey);
   });
 
-  it("should patch once when initial action chain contains a promise", function(done) {
+  it("should patch once when initial action chain contains a promise", done => {
     const numTestActions = 20;
     runActionsWithPromise(numTestActions, 1, done, "Increment1"); // 1 patch after promise
     expect(patchSpy).not.toHaveBeenCalled(); // No patch after init
@@ -156,7 +156,7 @@ describe("Jetix", function() {
     });
   }
 
-  it("should patch twice when a promise returns an array of actions", function(done) {
+  it("should patch twice when a promise returns an array of actions", done => {
     renderComponent(getId(), ({ action: a, task }) => {
       action = a;
 
@@ -202,7 +202,7 @@ describe("Jetix", function() {
     action("Increment1")(testKey);
   });
 
-  it("should patch once following a mix of action arrays and chains", function() {
+  it("should patch once following a mix of action arrays and chains", () => {
     const numTestActions = 20; // Must be even due to `i % 2`
 
     expect(patchSpy).not.toHaveBeenCalled();
@@ -216,7 +216,7 @@ describe("Jetix", function() {
     expect(patchSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("should not patch when initial action is a mix of arrays and chains", function() {
+  it("should not patch when initial action is a mix of arrays and chains", () => {
     const numTestActions = 20; // Must be even due to `i % 2`
 
     expect(patchSpy).not.toHaveBeenCalled();

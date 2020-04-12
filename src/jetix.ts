@@ -43,7 +43,7 @@ export type ActionHandler<D = Dict, P = Dict, S = Dict, RS = Dict> = (
 type TaskHandler<D = Dict, P = Dict, S = Dict, RS = Dict> = (data?: D) => Task<P, S, RS>;
 
 export type Task<P = Dict, S = Dict, RS = Dict> = {
-  perform: () => Promise<{}> | {} | void;
+  perform: () => Promise<{} | void> | {} | void;
   success?: (result: {} | void, ctx: Context<P, S, RS>) => Next;
   failure?: (error: {} | void, ctx: Context<P, S, RS>) => Next;
 };
@@ -171,33 +171,42 @@ export function renderComponent<C extends Component>(
       const tasks = config.tasks;
       if (tasks) {
         const { perform, success, failure }: Task<C['Props'], C['State'], C['RootState']> = tasks[taskName](data);
-        const output = perform();
-        if (isPromise(output)) {
-          return output
-            .then((result: Dict): Next => {
-              log.taskSuccess(id, String(taskName));
-              return success && success(result, { props, state, rootState });
-            })
-            .catch((err: Error): Next => {
-              log.taskFailure(id, String(taskName), err);
-              return failure && failure(err, { props, state, rootState })
-            });
+        const runSuccess = (result: {} | void): Next | undefined => success && success(result, { props, state, rootState } || undefined);
+        const runFailure = (err: {}): Next | undefined => failure && failure(err, { props, state, rootState } || undefined);
+        try {
+          const output = perform();
+          log.taskPerform(String(taskName), isPromise(output));
+          if (isPromise(output)) {
+            render(props); // Render any pending state updates
+            return output
+              .then((result: {} | void): Next => {
+                log.taskSuccess(id, String(taskName));
+                return runSuccess(result);
+              })
+              .catch((err: Error): Next => {
+                log.taskFailure(id, String(taskName), err);
+                return runFailure(err);
+              });
+          }
+          else {
+            log.taskSuccess(id, String(taskName));
+            return Promise.resolve(runSuccess(output));
+          }
         }
-        else if (success) {
-          return Promise.resolve(success(output, { props, state, rootState }));
+        catch(err) {
+          log.taskFailure(id, String(taskName), err);
+          return Promise.resolve(runFailure(err));
         }
       }
     };
     const taskThunk = (thunkInput?: Dict): Promise<Next> | void => {
-      if (isDomEvent(thunkInput)) {
-        // Invoked from the DOM, `thunkInput` is the (unused) event
-        const promise = performTask();
-        if (promise && promise.then) {
-          promise.then((next?: Next): void => run(next, props));
+      if (isDomEvent(thunkInput) || thunkInput === internalKey) {
+        // When invoked from the DOM, `thunkInput` is the (unused) event
+        const result = performTask();
+        if (isPromise(result)) {
+          result.then((next?: Next): void => run(next, props));
         }
-      }
-      else if (thunkInput === internalKey) {
-        return performTask();
+        return result;
       }
       else {
         log.manualError(id, String(taskName));
@@ -244,27 +253,19 @@ export function renderComponent<C extends Component>(
     if (!next) {
       render(props);
     }
+    // Thunks may only be invoked here or from the DOM
+    // `internalKey` prevents any manual calls from outside
     else if ((next as ActionThunk).type === ThunkType.Action) {
-      // An action thunk may only be invoked here or from the DOM
-      // `internalKey` prevents any manual calls from outside
       (next as ActionThunk)(internalKey);
+    }
+    else if ((next as TaskThunk).type === ThunkType.Task) {
+      (next as TaskThunk)(internalKey);
     }
     else if (Array.isArray(next)) {
       noRender++;
       next.forEach((n: Next): void => run(n, props, prevTag));
       noRender--;
       render(props);
-    }
-    else if ((next as TaskThunk).type === ThunkType.Task) {
-      const result = (next as TaskThunk)(internalKey);
-      const taskName = (next as TaskThunk).taskName;
-      if (isPromise(result)) {
-        result.then((n: Next): void => {
-          run(n, props, prevTag);
-        })
-      }
-      log.taskPerform(String(taskName), isPromise(result));
-      render(props); // End of sync chain
     }
   }
 
