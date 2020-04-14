@@ -20,7 +20,7 @@ export type GetActionThunk<A> = <K extends keyof A>(actionName: K, data?: A[K]) 
 export type RunAction<A> = (actionName: keyof A, data?: ValueOf<A>) => void;
 
 export type TaskThunk = {
-  (data?: Dict): Promise<Next> | void;
+  (data?: Dict): Promise<Next | void> | void;
   type: ThunkType;
   taskName: string;
 };
@@ -82,17 +82,17 @@ export type Dict<T = {}> = Record<string, T>;
 
 
 // App state
-let renderRefs: { [id: string]: RenderFn<Dict> } = {};
+export let renderRefs: { [id: string]: RenderFn<Dict> } = {};
+export let prevProps: Record<string, Dict | undefined> = {};
+export let renderIds: Record<string, boolean> = {};
 let rootState: Dict | undefined;
-let prevProps: Record<string, Dict | undefined> = {};
-let renderIds: Record<string, boolean> = {};
 let renderRootId: string | undefined;
 
 function resetAppState(): void {
   renderRefs = {};
-  rootState = undefined;
   prevProps = {};
   renderIds = {};
+  rootState = undefined;
   renderRootId = undefined;
 }
 
@@ -199,14 +199,13 @@ export function renderComponent<C extends Component>(
         }
       }
     };
-    const taskThunk = (thunkInput?: Dict): Promise<Next> | void => {
+    const taskThunk = (thunkInput?: Dict): Promise<Next | void> | void => {
+      // When invoked from the DOM, `thunkInput` is the (unused) event
       if (isDomEvent(thunkInput) || thunkInput === internalKey) {
-        // When invoked from the DOM, `thunkInput` is the (unused) event
         const result = performTask();
-        if (isPromise(result)) {
-          result.then((next?: Next): void => run(next, props));
-        }
-        return result;
+        return isPromise(result)
+          ? result.then((next?: Next): void => run(next, props))
+          : result;
       }
       else {
         log.manualError(id, String(taskName));
@@ -253,13 +252,10 @@ export function renderComponent<C extends Component>(
     if (!next) {
       render(props);
     }
-    // Thunks may only be invoked here or from the DOM
-    // `internalKey` prevents any manual calls from outside
-    else if ((next as ActionThunk).type === ThunkType.Action) {
-      (next as ActionThunk)(internalKey);
-    }
-    else if ((next as TaskThunk).type === ThunkType.Task) {
-      (next as TaskThunk)(internalKey);
+    else if (isThunk(next)) {
+      // Thunks may only be invoked here or from the DOM
+      // `internalKey` prevents any manual calls from outside
+      next(internalKey);
     }
     else if (Array.isArray(next)) {
       noRender++;
@@ -375,6 +371,13 @@ function setRenderRef(vnode: VNode, id: string, render: RenderFn<Dict>): void {
       log.setStateGlobal(id, undefined);
     }
   });
+}
+
+function isThunk(next: Next): next is ActionThunk | TaskThunk {
+  if (next) {
+    return !Array.isArray(next) && next.type in ThunkType;
+  }
+  return false;
 }
 
 function isPromise<T>(o: Promise<T> | {} | void): o is Promise<T> {

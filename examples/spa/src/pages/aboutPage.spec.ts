@@ -1,4 +1,4 @@
-import { testComponent, NextData } from "jetix";
+import { testComponent } from "jetix";
 import aboutPage from "./aboutPage";
 
 describe("About Page component", () => {

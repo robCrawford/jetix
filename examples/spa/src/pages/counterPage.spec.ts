@@ -1,4 +1,4 @@
-import { testComponent, NextData } from "jetix";
+import { testComponent } from "jetix";
 import counterPage from "./counterPage";
 
 describe("Counter Page component", () => {

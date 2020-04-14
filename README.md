@@ -16,26 +16,28 @@ Also contains lightweight prevention of anti-patterns like state mutation and ma
 
 ------------------------
 
-## Components
-
-### `component(callback)`
+### Actions and tasks
 The `component` callback receives an object exposing `action`, `task`, `rootAction` and `rootTask` functions.
 
 ```JavaScript
 export default component(
   ({ action, task, rootAction, rootTask }) => ({
-    ...
+    // Initial action
+    init: action( "ShowMessage", { text: "Hello World!" } ),
   })
 );
 ```
 
-### `Context`
-All `action` handlers, `task` callbacks and `view` functions receive `Context` as their second argument.\
-This can be destructured to provide `props`, `state` and `rootState`.
+### Props and state
+All `action` handlers, `task` callbacks and `view` functions receive `props`, `state` and `rootState` via a `Context` input.
 
 ```JavaScript
 view(id, { props, state, rootState }) {
-  ...
+  return div(`#${id}-message`, [
+    // Render from props and state
+    h1(props.title),
+    div(state.text)
+  ]);
 }
 ```
 

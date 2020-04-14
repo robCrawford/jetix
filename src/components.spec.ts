@@ -1,4 +1,4 @@
-import { _setTestKey, component, html, mount } from "../src/jetix";
+import { _setTestKey, component, html, mount, renderRefs, prevProps, renderIds } from "../src/jetix";
 import { log } from "../src/jetixLog";
 import * as vdom from "../src/vdom";
 const { div } = html;
@@ -58,6 +58,7 @@ describe("Jetix components", () => {
       Actions: {
         Increment: { step: number };
         NoOp: null;
+        Mutate: { k: string };
       };
     }>(({ action: a })  => {
       childAction = a;
@@ -65,7 +66,12 @@ describe("Jetix components", () => {
         state: () => ({ count: 0 }),
         actions: {
           Increment: ({ step }, { state }) => ({ state: { ...state, count: state.count + step } }),
-          NoOp: (_, { state }) => ({ state })
+          NoOp: (_, { state }) => ({ state }),
+          Mutate: ({ k }, { state, props }) => {
+            if (k === 'state') state.count = 999;
+            if (k === 'props') props.test = '999';
+            return { state };
+          }
         },
         view: id => div(`#${id}`, "test")
       };
@@ -88,7 +94,16 @@ describe("Jetix components", () => {
         state: () => ({ count: 0 }),
         actions: parentActions,
         tasks: parentTasks,
-        view: id => div(`#${id}`, child(`#child`, { test: "x" }))
+        view: (id, { state }) => div(`#${id}`,
+        state.count < 100
+          // < 100 renders child component
+          ? child(`#child`, { test: "x" })
+          : state.count < 1000
+            // 100 to 999 renders with no child component
+            ? "-"
+            // 1000+ renders child component but with a duplicate id
+            : child(`#parent`, { test: "x" })
+        )
       };
     });
 
@@ -189,5 +204,63 @@ describe("Jetix components", () => {
     })
   });
 
+  it("should throw when state is mutated", () => {
+    expect(() => childAction("Mutate", { k: 'state' })(testKey))
+      .toThrowError("Cannot assign to read only property 'count' of object");
+  });
+
+  it("should throw when props is mutated", () => {
+    expect(() => childAction("Mutate", { k: 'props' })(testKey))
+      .toThrowError("Cannot assign to read only property 'test' of object");
+  });
+
+  it("should throw when a duplicate id is found", () => {
+    expect(() => parentAction("Increment", { step: 1000 })(testKey))
+      .toThrowError('Component "parent" must have a unique id!');
+  });
+
+  it("should throw when an action is called manually", () => {
+    expect(() => parentAction("Increment", { step: 1 })())
+      .toThrowError('#parent "Increment" cannot be invoked manually');
+  });
+
+  it("should allow action calls with a DOM event input", () => {
+    expect(() => parentAction("Increment", { step: 1 })({ eventPhase: 1 }))
+      .not.toThrow();
+  });
+
+  it("should throw when a task is called manually", () => {
+    expect(() => parentTask("Validate", { count: 1 })())
+      .toThrowError('#parent "Validate" cannot be invoked manually');
+  });
+
+  it("should allow task calls with a DOM event input", () => {
+    expect(() => parentTask("Validate", { count: 1 })({ eventPhase: 1 }))
+      .not.toThrow();
+  });
+
+  it("should remove references when an existing component is not rendered", () => {
+    const testRefs = (expectedIds) => {
+      const refIds = Object.keys(renderRefs);
+      expect(refIds).toEqual(expectedIds);
+      expect(Object.keys(prevProps)).toEqual(refIds);
+      expect(renderIds).toEqual({});
+    }
+
+    parentAction("Increment", { step: 1 })(testKey);
+    expect(renderSpy).toHaveBeenCalledTimes(2);
+    expect(patchSpy).toHaveBeenCalledTimes(1);
+    testRefs(["child", "parent", "app"]);
+
+    parentAction("Increment", { step: 99 })(testKey);
+    expect(renderSpy).toHaveBeenCalledTimes(3);
+    expect(patchSpy).toHaveBeenCalledTimes(2);
+    testRefs(["parent", "app"]);
+
+    parentAction("Decrement", { step: 1 })(testKey);
+    expect(renderSpy).toHaveBeenCalledTimes(5);
+    expect(patchSpy).toHaveBeenCalledTimes(3);
+    testRefs(["parent", "app", "child"]);
+  });
 });
 
