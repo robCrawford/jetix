@@ -26,6 +26,6 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "jetix": "^0.2.0"
+    "jetix": "^0.2.3"
   }
 }

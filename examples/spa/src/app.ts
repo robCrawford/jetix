@@ -49,7 +49,6 @@ export default component<Component>(
       }
     }),
 
-    // Root actions, import into any component
     actions: {
       SetPage: ({ page }, { state }): { state: RootState } => {
         return {
@@ -80,7 +79,6 @@ export default component<Component>(
       }
     },
 
-    // Root tasks, import into any component
     tasks: {
       // Demonstrates a task that is only an effect
       SetDocTitle: ({ title }): Task<RootProps, RootState> => ({
